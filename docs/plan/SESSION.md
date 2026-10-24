@@ -49,7 +49,7 @@ You write code yourself only under the escalation rules below.
   bottom if missing).
 - **Not A1 and M0 not on main** (`docs/plan/progress/A1.md` has no `A1-S0 | done` row)? Stop. Tell
   the human to do their H0 tasks (README) and come back when A1 posts "M0". Exception: A3-S1 only
-  touches `docker/ledger/` and `scripts/chain/`, so it starts at T+0:00 without M0.
+  touches `scripts/chain/` (self-contained Sepolia scripts), so it starts at T+0:00 without M0.
 - **Pick the step:** the one the human named, or the first one not done in the progress file.
 - **Dependencies:** for each thing the step needs from another agent, check it's real
   (`rg "not implemented: A3-S2" src` returns nothing). If it isn't ready, plan against the stub with

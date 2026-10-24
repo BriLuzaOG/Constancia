@@ -9,7 +9,7 @@ entirely.** This folder is the whole plan:
 | [contracts.md](contracts.md) | Every shared type, route, schema and format. The glue between agents. |
 | [agent-1-design.md](agent-1-design.md) | A1 · Pivot foundation, design kit, landing, `/ledger`, polish, submission |
 | [agent-2-credential.md](agent-2-credential.md) | A2 · Keys, SD-JWT VC, presentation, verification pipeline, Verified CV, attacks, `/verify` |
-| [agent-3-ledger.md](agent-3-ledger.md) | A3 · Consortium network, contracts, account abstraction, bundler, ledger reads and client |
+| [agent-3-ledger.md](agent-3-ledger.md) | A3 · Sepolia ledger, contracts, account abstraction, paymaster, bundler, reads and client |
 | [agent-4-employer.md](agent-4-employer.md) | A4 · DB, blind mailbox, key sign-in, employer console, requests, issuing, revoking |
 | [agent-5-holder.md](agent-5-holder.md) | A5 · Vault, requests, share builder, Verified CV portal, Fake Letter Lab |
 | [demo.md](demo.md) | The 3-minute demo script, pre-flight checklist, fallbacks, Q&A |
@@ -39,14 +39,13 @@ credentials that prove themselves and show only what the holder chooses.
 - **Verifier** (`/verify`): open the link, five checks run in the browser, and only the claims the
   holder chose appear, with the exact count of what stays hidden. `/verify/lab` lets anyone try four
   forgeries and watch each fail at a named check.
-- **Consortium** (`/ledger`): the public page of the network: four validators, blocks rotating
-  between proposers, members, accredited employers, anchored hashes. `/ledger/operator` lets demo
-  members approve an employer.
+- **Consortium** (`/ledger`): the public page of the ledger: live Sepolia blocks, members,
+  accredited employers, anchored hashes. `/ledger/operator` lets demo members approve an employer.
 
 **Out of scope (decided):** identity proofing of employees, HRIS/payroll integrations, a native app,
-holder multi-device recovery, true zero-knowledge predicates (BBS+/ZK), validator governance UI,
-Merkle batching of anchors, paymasters, ERC-1271, federation between consortia, a printable PDF
-(stretch X1), challenge mode (stretch X2), pricing or subscriptions.
+holder multi-device recovery, true zero-knowledge predicates (BBS+/ZK), third-party gas sponsorship
+services (we run our own paymaster), Merkle batching of anchors, ERC-1271, federation between
+consortia, a printable PDF (stretch X1), challenge mode (stretch X2), pricing or subscriptions.
 
 ### What changed from the ScholarKey plan
 
@@ -55,7 +54,7 @@ Merkle batching of anchors, paymasters, ERC-1271, federation between consortia, 
 | Graduation diploma PDF with a byte-range seal | Employment certificate as an SD-JWT VC. No PDF (printable letter = stretch) |
 | JWT ES256K, Privy raw-hash signing | SD-JWT with selective disclosure, ES256 device keys (WebCrypto) |
 | `did:web`, trust root is the institution's domain | `did:constancia` resolved from the ledger. Trust root = accreditation by a quorum of consortium members |
-| Base Sepolia anchor, just-in-time gas sponsor | Besu QBFT consortium ledger, 4 validators, zero gas, ERC-4337 accounts, no paymaster |
+| Base Sepolia anchor, just-in-time gas sponsor | Public Sepolia consortium ledger, ERC-4337 accounts, one sponsor wallet pays all gas through our paymaster |
 | Email login through Privy | Sign in by signing a challenge with the device key |
 | Subscription mock gates issuing | Accreditation gates issuing |
 | Issuer builds the PDF and hands it over | Holder requests, employer issues, delivery is end-to-end encrypted |
@@ -70,9 +69,12 @@ Merkle batching of anchors, paymasters, ERC-1271, federation between consortia, 
    each certificate is a new credential with its own hash and key.
 3. **The join is a "Verified CV"**: a file of normal presentations where every certificate key signs
    the hash of the whole set (contracts §4.4). No portal-held key, no server, nothing to trust.
-4. **Consortium = Besu QBFT**, four validators in docker compose on one VPS, zero gas.
-5. **Account abstraction = our own small P-256 account contract + factory + a trivial bundler route**
-   inside Next, on the canonical EntryPoint v0.7. A time-boxed spike decides, with a named fallback.
+4. **Consortium = the member set of `Ledger.sol` on public Sepolia** (chain 11155111). No network
+   to host: the members are the governance, not the validators; the chain is open to read.
+5. **Account abstraction = our own small P-256 account contract + factory + verifying paymaster
+   owned by the sponsor wallet + a trivial bundler route** inside Next, on the canonical EntryPoint
+   v0.7 (already live on Sepolia). The sponsor pays every fee; users never see one. A time-boxed
+   spike decides, with a named fallback.
 6. **W3C VC Data Model 2.0 payload secured with SD-JWT**, ES256, W3C DID document from a custom
    `did:constancia` method.
 7. **Selective disclosure, not zero-knowledge.** We say so ourselves (contracts §12).
@@ -143,7 +145,7 @@ Steps are tagged **[M]** must, **[S]** should, **[X]** stretch.
 | --- | --- |
 | `package.json`, lockfile, `next.config.ts`, `tsconfig.json`, CI, `render.yaml`, `src/lib/env.ts`, `src/lib/handoff.ts`, `src/app/layout.tsx`, `globals.css`, `src/components/ui/`, `/` landing, `/dev/kit`, `/ledger/**`, submission files | **A1** |
 | `src/lib/credential/`, `public/contexts/`, `/verify` (page, `_components`, `_lib`) | **A2** |
-| `docker/ledger/`, `contracts/`, `scripts/chain/`, `scripts/check-demo.ts`, `src/lib/ledger/`, `/api/bundler`, `/api/ledger/**`, `/api/did/**`, `/api/dev/**`, `/dev/identity`, `public/demo/` | **A3** |
+| `contracts/`, `scripts/chain/`, `scripts/check-demo.ts`, `src/lib/ledger/`, `/api/bundler`, `/api/ledger/**`, `/api/did/**`, `/api/dev/**`, `/dev/identity`, `public/demo/` | **A3** |
 | `prisma/`, `src/lib/server/`, `src/lib/employer/`, `/employer/**`, `/api/auth/**`, `/api/requests/**`, `/api/employer/**`, `/api/shares/**` | **A4** |
 | `src/lib/vault/`, `/vault/**`, `/cv/**`, `/verify/lab/**` | **A5** |
 
@@ -155,11 +157,11 @@ in a tiny commit, push right away.
 ## Timeline (T+ hours from kickoff, T+0 ≈ 16:30)
 
 ```
-T+0:00 ─ H0 human setup (all)   A1-S0 pivot foundation   A3-S1 starts (docker/ only, no repo deps)
+T+0:00 ─ H0 human setup (all)   A1-S0 pivot foundation   A3-S1 starts (scripts/chain/ only, no repo deps)
 T+1:00 ─ M0  pivot on main → fan out
 T+3:00 ─ M1  SD-JWT issue + present round-trips · memory ledger + gateway routes · DB + mailbox routes
-          · vault keys + request flow · consortium network up locally and on the VPS
-T+4:45 ─ A3 GO / NO-GO: a P-256 device key's UserOp lands on the network at zero fee
+          · vault keys + request flow · Sepolia reachable and the sponsor wallet funded
+T+4:45 ─ A3 GO / NO-GO: a P-256 device key's UserOp lands on Sepolia with the user paying no fee
           (else the AA-lite fallback, announced to the whole team)
 T+7:15 ─ M2  the whole product runs on the memory ledger: request → issue → deliver → share →
           verify (five checks) → verified CV model. Local only
@@ -188,7 +190,7 @@ once and switch to the AA-lite fallback (contracts §7).
 
 ### If we run behind, cut in this order
 
-1. X2 challenge mode, X1 printable letter, the validator-kill demo beat.
+1. X2 challenge mode, X1 printable letter, the paymaster-burn-down demo beat.
 2. Team keys UI (`/employer/team`) and the issued-list polish.
 3. `/ledger/operator` UI (approve with `scripts/chain/seed.ts` instead).
 4. Landing below the fold (keep the first viewport).
@@ -203,11 +205,11 @@ ledger (M3), the `/ledger` page.
 
 | # | Task | Who |
 | --- | --- | --- |
-| H1 | **Consortium host:** a Linux VPS, ≥ 4 vCPU and 8 GB RAM, Docker and Docker Compose, ports 80/443 open, a hostname (or a Cloudflare Tunnel). Give A3 SSH access. **Fallback:** run the same compose on one team laptop behind a Cloudflare Tunnel | A3's human |
+| H1 | **Sepolia gas and RPC:** an Alchemy account (a Sepolia API key for `LEDGER_RPC_URL`) and faucet rounds for the sponsor wallet A3 creates (target ≥ 0.5 ETH total) | A3's human |
 | H2 | **Postgres:** a free Neon (or Render Postgres) database → `DATABASE_URL` (pooled) | A4's human |
-| H3 | **Foundry** (`curl -L https://foundry.paradigm.xyz \| bash`, then `foundryup`) and Docker on every machine that touches contracts or the network | A3's human |
+| H3 | **Foundry** (`curl -L https://foundry.paradigm.xyz \| bash`, then `foundryup`) on every machine that touches contracts | A3's human |
 | H4 | **Render:** mirror the repo to a personal GitHub (see root README) → Blueprint → the web service → set env vars → GitHub secrets for CD. The static `waraira-university` service is gone: remove it from the blueprint | A1's human |
-| H5 | **Secrets:** A3 generates `RELAYER_PRIVATE_KEY` (a throwaway key with no funds), A4 generates `SESSION_SECRET`. Share everything in a private channel; each dev creates `.env.local` from `.env.example` | everyone |
+| H5 | **Secrets:** A3 generates `RELAYER_PRIVATE_KEY` (the Sepolia sponsor key — funded, see H1), A4 generates `SESSION_SECRET`. Share everything in a private channel; each dev creates `.env.local` from `.env.example` | everyone |
 | H6 | **Demo browsers:** three Chrome profiles named Registrar, Holder and Recruiter (the recruiter one in incognito), zoom 125 % | the presenter's team |
 | H7 | **Submission:** (README done, banana rule dropped) put the Render URL in `deploy-url` (`platanus-hack-project.jsonc`) | the team, then A1 |
 
@@ -220,11 +222,11 @@ them as demos everywhere and never use a real company's name.
 
 | Risk | We know by | Fallback |
 | --- | --- | --- |
-| The 4-node network will not stabilise, or the VPS is too small | A3-S1, T+1:30 | tune `-Xmx`, move to an 8 GB host, else run it on a laptop behind a tunnel |
-| Account abstraction rejects zero gas, or P-256 verify blows the gas limit | A3-S3, T+4:45 | give the EntryPoint a funded deposit and a 1-wei price; else AA-lite (relayer submits `execute(op, signature)`); announce it |
+| The Sepolia RPC rate-limits or lags, or faucets under-deliver | A3-S1, T+1:30 | an Alchemy API key, request batching and backoff, a backup provider URL; fund the sponsor early and keep a deposit buffer |
+| 4337 or the paymaster misbehaves on Sepolia | A3-S3, T+4:45 | pre-fund accounts directly from the sponsor; else AA-lite (relayer submits `execute(op, signature)`); announce it |
 | The SD-JWT library does not fit our nested `credentialSubject` or the CV seal | A2-S1, T+1:20 | hand-roll the ~200 lines (contracts §4.2 lists the exact mechanics) |
 | Non-extractable device keys are lost with browser data | demo prep | `demo-pack` re-import through `/dev/identity` and `/vault/import`; keep copies in the team drive |
-| Render ↔ VPS latency or an outage on demo day | pre-flight | phone hotspot, the laptop-hosted network, then the backup video |
+| Render ↔ Sepolia RPC outage on demo day | pre-flight | the backup provider URL, phone hotspot, then the backup video |
 | Everything behind the schedule | M2 at T+7:15 | use the cut list above, in order |
 
 ---
@@ -233,7 +235,7 @@ them as demos everywhere and never use a real company's name.
 
 | Criterion | Weight | Where we earn it |
 | --- | --- | --- |
-| Technical | 25% | SD-JWT VC with selective disclosure and key binding · a Verified CV sealed by every certificate key · QBFT consortium ledger with zero gas · ERC-4337 accounts on P-256 device keys with no paymaster · fully client-side verification |
+| Technical | 25% | SD-JWT VC with selective disclosure and key binding · a Verified CV sealed by every certificate key · consortium ledger on public Sepolia · ERC-4337 accounts on P-256 device keys with gas paid invisibly by the sponsor's paymaster · fully client-side verification |
 | Impact | 20% | Employment letters are forged constantly and trusted anyway; the diaspora, banks, landlords and consulates all depend on them; the holder reveals less, not more |
 | Originality | 15% | The Verified CV join · "prove one fact, reveal nothing else" · five forgeries, five named checks · a consortium of employers and institutions instead of one company or a public chain |
 | Ambition | 20% | Employer → holder → verifier ecosystem with its own consortium network, account abstraction, accreditation governance, revocation and CV joining, in 14 h |
@@ -245,6 +247,6 @@ them as demos everywhere and never use a real company's name.
 
 - **X1** Printable letter: PDF with the chosen claims and a QR to the share link (A2, re-add `pdf-lib`).
 - **X2** Challenge mode: the verifier shows a nonce QR, the holder answers, no replay (A2/A5).
-- Kill one validator on stage and show the chain keep producing blocks (A3, A1 on `/ledger`).
-- Read from several member nodes and require agreement (A3).
+- Burn the paymaster deposit on stage, show ops keep flowing, top it up live (A3, A1 on `/ledger`).
+- Read from two RPC providers and require agreement (A3).
 - Multi-owner recovery for holders (A3/A5).

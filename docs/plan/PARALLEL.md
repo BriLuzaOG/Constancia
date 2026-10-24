@@ -19,9 +19,9 @@ M0 is done (A1-S0 on main), so all six sessions start now.
    and paste that lane's prompt below. Order doesn't matter.
 3. Each session works through its list alone, pushing to `main` after every step, and stops when the
    list is done or a stop-and-ask case hits. Watch for those, answer, and tell the session `resume`.
-4. Needs from you in parallel (README H0): a Postgres `DATABASE_URL` (A4), Docker + Foundry on the
-   machine that runs the chain lane (A3), a VPS or laptop for the network, Render env vars (A1).
-   Everything else works locally on the memory ledger.
+4. Needs from you in parallel (README H0): a Postgres `DATABASE_URL` (A4), an Alchemy account with a
+   Sepolia API key and faucet rounds for the sponsor wallet, Foundry on the machine that runs the
+   chain lane (A3), Render env vars (A1). Everything else works locally on the memory ledger.
 
 ## Autopilot rules (every prompt below applies them; they override SESSION.md where they differ)
 
@@ -92,12 +92,13 @@ pushed and report.
 ```
 Run docs/plan/SESSION.md as the orchestrator for agent A3, lane "chain", in AUTOPILOT mode: follow
 docs/plan/PARALLEL.md "Autopilot rules". Another session runs A3's TypeScript lane in parallel
-(src/lib/ledger/**, src/app/api/**): do NOT touch those paths. You own docker/ledger/, contracts/,
-scripts/chain/ and scripts/check-demo.ts. Do in order, each committed and pushed: A3-S1, A3-S3,
-A3-S4, then the chain parts of A3-S7 (deploy and seed scripts) and A3-S8. A3-S3 is a hard step with
-a go/no-go: if P-256 account abstraction cannot pass, take the AA-lite fallback in contracts §7 and
-tell the human before continuing. Docker and Foundry must exist on this machine: if they don't,
-stop and ask the human to install them. Record progress in docs/plan/progress/A3.md (the lane
+(src/lib/ledger/**, src/app/api/**): do NOT touch those paths. You own contracts/,
+scripts/chain/ and scripts/check-demo.ts. Do in order, each committed and pushed: A3-S1 (fund the
+sponsor wallet FIRST — faucets are slow), A3-S3, A3-S4, then the chain parts of A3-S7 (deploy and
+seed scripts) and A3-S8. A3-S3 is a hard step with a go/no-go: if P-256 account abstraction with
+our paymaster cannot pass, take the AA-lite fallback in contracts §7 and tell the human before
+continuing. Foundry must exist on this machine: if it doesn't,
+stop and ask the human to install it. Record progress in docs/plan/progress/A3.md (the lane
 sessions share it: add rows only, pull --rebase before each edit).
 ```
 
@@ -105,8 +106,8 @@ sessions share it: add rows only, pull --rebase before each edit).
 
 ```
 Run docs/plan/SESSION.md as the orchestrator for agent A3, lane "ts", in AUTOPILOT mode: follow
-docs/plan/PARALLEL.md "Autopilot rules". Another session runs A3's chain lane (docker/ledger,
-contracts, scripts/chain): do NOT touch those paths. You own src/lib/ledger/**, src/app/api/ledger,
+docs/plan/PARALLEL.md "Autopilot rules". Another session runs A3's chain lane (contracts,
+scripts/chain): do NOT touch those paths. You own src/lib/ledger/**, src/app/api/ledger,
 api/did, api/bundler, api/dev, src/app/dev/identity and public/demo. Do in order, each committed and
 pushed: A3-S2 first and fast (every other lane is building against your memory ledger and gateway),
 then A3-S5, A3-S6 and the TypeScript parts of A3-S7. S5 and S6 need the deployed contract and ABI

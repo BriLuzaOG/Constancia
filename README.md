@@ -24,8 +24,8 @@ it in seconds, with nothing to install.
 ## 🏗️ Architecture
 
 - **Credential:** W3C VC 2.0 secured with SD-JWT (selective disclosure), ES256 device keys.
-- **Ledger:** Besu QBFT consortium, four validators, zero gas; stores hashes only.
-- **Accounts:** ERC-4337 accounts controlled by P-256 device keys, no paymaster.
+- **Ledger:** public Sepolia, a consortium contract with members and quorum; stores hashes only.
+- **Accounts:** ERC-4337 accounts controlled by P-256 device keys; a consortium sponsor wallet pays all gas.
 - **Server:** a blind mailbox (ciphertext, public keys, opaque employee number) on Postgres.
 - **Verifier:** all five checks run in the browser.
 
@@ -38,8 +38,8 @@ pnpm dev                     # http://localhost:3000
 ```
 
 By default the app uses the in-memory ledger (`LEDGER_MODE=memory`, development and tests only).
-For the real consortium network, run `pnpm chain:up` (needs Docker) and set `LEDGER_MODE=chain`
-and `NEXT_PUBLIC_LEDGER_MODE=chain`.
+For the real ledger, set `LEDGER_RPC_URL` (Sepolia), `LEDGER_MODE=chain` and
+`NEXT_PUBLIC_LEDGER_MODE=chain`, and run `pnpm chain:status` to check the connection.
 
 Before pushing: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
 
@@ -48,7 +48,7 @@ Before pushing: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
 - Selective disclosure, not zero-knowledge proofs.
 - The ledger proves who said it and when, not that it is true.
 - A shared link can be replayed until it expires.
-- In the demo all four validators run on one host.
+- In the demo the ledger runs on public Sepolia and one sponsor wallet pays all gas.
 - All employers, members and people shown are fictional.
 
 ## 📚 Docs

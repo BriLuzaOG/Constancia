@@ -30,7 +30,7 @@ flowchart LR
     GW[/api/ledger/* read gateway/]
     DB[(Postgres)]
   end
-  subgraph NET[Consortium ledger · Besu QBFT · 4 validators · zero gas]
+  subgraph NET[Consortium ledger · public Sepolia · fees paid by the sponsor's paymaster]
     EP[EntryPoint v0.7]
     ACC[ConsortiumAccount + factory]
     LED[Ledger.sol<br/>members · accreditation · anchors]
@@ -53,8 +53,8 @@ flowchart LR
    holder binding, ECDH key for delivery) and posts the two public keys, the employer and an opaque
    employee number. No name, no claims.
 3. **Issue.** HR opens the request, picks the employee from the local directory, the browser builds
-   the SD-JWT VC, signs it with a device key, anchors `sha256(issuer JWT)` on the ledger (UserOp, zero
-   fee), encrypts the credential to the holder's ECDH key and posts the ciphertext. The server never
+   the SD-JWT VC, signs it with a device key, anchors `sha256(issuer JWT)` on the ledger (UserOp, fee
+   paid by the consortium's sponsor), encrypts the credential to the holder's ECDH key and posts the ciphertext. The server never
    sees a claim.
 4. **Share.** The holder picks which claims a reader may see, signs a key-binding JWT, encrypts the
    result with a random key and stores the ciphertext on the server. The link is
@@ -65,18 +65,18 @@ flowchart LR
    into one Verified CV: each certificate's own key signs the hash of the whole set.
 
 **Decisions vs. the previous design.** Trust root = consortium accreditation recorded on a
-permissioned ledger (replaces `did:web` and the institution's domain). Account abstraction with P-256
-device keys replaces Privy, and there is no paymaster because gas is zero. SD-JWT replaces the plain
-JWT. The PDF seal is gone; a printable letter is a stretch goal.
+public Sepolia contract (replaces `did:web` and the institution's domain). Account abstraction with
+P-256 device keys replaces Privy; gas is real but invisible — one sponsor wallet pays every fee
+through our verifying paymaster. SD-JWT replaces the plain JWT. The PDF seal is gone; a printable
+letter is a stretch goal.
 
 ---
 
 ## 2. Folder layout and owners
 
 ```
-docker/ledger/                                    A3   Besu QBFT network: compose, genesis, keys, README
-contracts/{ConsortiumAccount,AccountFactory,Ledger}.sol, contracts/vendor/, contracts/test/   A3
-scripts/chain/{compile,deploy,seed,smoke}.ts      A3
+contracts/{ConsortiumAccount,AccountFactory,VerifyingPaymaster,Ledger}.sol, contracts/vendor/, contracts/test/   A3
+scripts/chain/{compile,identities,deploy,deposit,seed,smoke,status}.ts      A3
 scripts/check-demo.ts                             A3
 prisma/schema.prisma, prisma.config.ts            A4
 public/contexts/constancia-v1.jsonld              A2
@@ -112,11 +112,11 @@ src/generated/prisma/                             generated, gitignored
 | --- | --- | --- |
 | `Hex` | `` `0x${string}` `` lowercase | `0x7f3a…` |
 | `Address` | `0x` + 40 hex, lowercase | `0x1f9a…` |
-| Chain ID | `24024` (private ledger) | |
+| Chain ID | `11155111` (Sepolia, public testnet) | |
 | Employer / member account | the `ConsortiumAccount` address | `0x1f9a…` |
-| Issuer DID | `did:constancia:<chainId>:<account>` | `did:constancia:24024:0x1f9a…` |
+| Issuer DID | `did:constancia:<chainId>:<account>` | `did:constancia:11155111:0x1f9a…` |
 | `keyId` | `keccak256(x ‖ y)` of the P-256 public key, x and y as 32-byte big-endian | `0x9c…` |
-| JWS `kid` | `<did>#<keyId>` | `did:constancia:24024:0x1f9a…#0x9c…` |
+| JWS `kid` | `<did>#<keyId>` | `did:constancia:11155111:0x1f9a…#0x9c…` |
 | `P256Jwk` | `{ kty:'EC', crv:'P-256', x, y }` base64url 32-byte coordinates | |
 | `EcdhJwk` | same shape, used only for delivery encryption | |
 | Credential hash | `0x` + `sha256(utf8(issuerJwt))` where `issuerJwt` is the compact JWS before the first `~` | `0x4be1…` |
@@ -185,11 +185,11 @@ Header: `{ "alg": "ES256", "typ": "vc+sd-jwt", "cty": "vc", "kid": "<did>#<keyId
 {
   "@context": ["https://www.w3.org/ns/credentials/v2", "<APP_URL>/contexts/constancia-v1.jsonld"],
   "type": ["VerifiableCredential", "EmploymentCredential"],
-  "issuer": "did:constancia:24024:0x1f9a…",
+  "issuer": "did:constancia:11155111:0x1f9a…",
   "validFrom": "2026-10-24T20:00:00Z",
   "validUntil": "2027-01-22T20:00:00Z",
   "credentialSubject": { "type": "Employee", "_sd": ["<12 digests, sorted>"] },
-  "iss": "did:constancia:24024:0x1f9a…",
+  "iss": "did:constancia:11155111:0x1f9a…",
   "iat": 1792872000,
   "exp": 1800648000,
   "cnf": { "jwk": { "kty": "EC", "crv": "P-256", "x": "…", "y": "…" } },
@@ -415,8 +415,9 @@ and hand them to `/dev/identity`, which re-imports them as non-extractable.
 
 ## 6. Ledger (A3 owns `contracts/` and `src/lib/ledger/`)
 
-Besu QBFT, chain ID 24024, 4 validators run by four fictional members, 2 s blocks, gas price zero
-(`--min-gas-price=0`, `zeroBaseFee: true`). Solidity 0.8.28, `evmVersion: 'paris'`, optimizer 200.
+Public Sepolia, chain ID 11155111, ~12 s blocks. The consortium is the member set of Ledger.sol (four
+fictional members); there are no validators to run. Gas is real but invisible: one sponsor wallet
+funds our verifying paymaster, which pays every fee. Solidity 0.8.28, `evmVersion: 'paris'`, optimizer 200.
 
 ```solidity
 interface ILedger {
@@ -460,11 +461,10 @@ export interface KeyInfo { keyId: Hex; jwk: P256Jwk; addedAt: number; removedAt:
 export interface RecordInfo { credentialHash: Hex; issuer: Address; keyId: Hex; anchoredAt: number; revokedAt: number | null; blockNumber: number }
 export interface Head { number: number; time: number }
 export interface NetworkState {
-  chainId: number; head: Head; blockTimeSec: number; quorum: number;
+  chainId: number; head: Head; blockTimeSec: number; quorum: number;  // blockTimeSec = 12 (Sepolia)
   members: { account: Address; name: string }[];
-  validators: { address: Address; name: string | null }[];
   issuers: IssuerInfo[];
-  blocks: { number: number; time: number; proposer: Address; txCount: number }[];     // last 16, proposer = block.miner
+  blocks: { number: number; time: number; txCount: number }[];     // last 16 Sepolia blocks
   anchors: { credentialHash: Hex; issuer: Address; blockNumber: number; time: number }[]; // last 10, hashes only
 }
 export interface LookupRequest { issuer: Address; keyId: Hex; credentialHash: Hex }
@@ -497,7 +497,7 @@ DID document returned by `GET /api/did/resolve?did=…`:
 ```json
 {
   "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/jws-2020/v1"],
-  "id": "did:constancia:24024:0x1f9a…",
+  "id": "did:constancia:11155111:0x1f9a…",
   "verificationMethod": [{ "id": "<did>#0x9c…", "type": "JsonWebKey2020", "controller": "<did>",
                            "publicKeyJwk": { "kty": "EC", "crv": "P-256", "x": "…", "y": "…" } }],
   "assertionMethod": ["<did>#0x9c…"]
@@ -508,9 +508,10 @@ DID document returned by `GET /api/did/resolve?did=…`:
 
 ## 7. Account abstraction (A3)
 
-ERC-4337 EntryPoint v0.7 (canonical `0x0000000071727De22E5E9d8BAf0edAc6f37da032`, from viem's
-`entryPoint07Address`), pre-deployed on the ledger. **No paymaster:** `maxFeePerGas = 0`, the relayer
-account holds no funds, and gas limits are generous constants because nothing is billed.
+ERC-4337 EntryPoint v0.7 (canonical `0x0000000071727De22E5E9d8BAf0edAc6f37da032`, viem's
+`entryPoint07Address`), **already deployed on Sepolia** — verify its code with `eth_getCode`, never
+deploy it. **Our paymaster pays every fee:** UserOps carry real Sepolia gas fields plus a
+sponsor-signed `paymasterAndData`; accounts never hold ETH and users are billed nothing.
 
 ```solidity
 interface IConsortiumAccount {            // implements IAccount (v0.7)
@@ -532,19 +533,26 @@ interface IAccountFactory {
   signed message is the 32-byte `userOpHash`; WebCrypto hashes it with SHA-256, so the account verifies
   P-256 over `sha256(abi.encodePacked(userOpHash))`. Accept high-s (`s` is not normalised; the nonce
   already prevents replay).
-- **P-256 on chain:** a private chain has no canonical verifier deployment. Vendor an MIT
-  pure-Solidity P-256 verifier (Daimo `P256Verifier`, FreshCryptoLib or Solady) in
-  `contracts/vendor/` and use it as an internal library. Zero gas makes its cost irrelevant. Use the
-  RIP-7212 precompile only if the Besu version has it.
+- **P-256 on chain:** Sepolia does not guarantee the RIP-7212 precompile. Vendor an MIT pure-Solidity
+  P-256 verifier (Daimo `P256Verifier`, FreshCryptoLib or Solady) in `contracts/vendor/` and compile
+  it in as an internal library.
+- **Paymaster:** `contracts/VerifyingPaymaster.sol` (v0.7), owned by the sponsor EOA
+  (`RELAYER_PRIVATE_KEY`). `paymasterAndData` = the sponsor's signature over the `userOpHash` plus a
+  validity window; only our bundler asks the sponsor to sign, so only ops that passed its rate
+  limits get paid for. The sponsor funds it by depositing on the EntryPoint (`pnpm
+  chain:deposit`); the deposit is the single pool that absorbs every fee.
 - **Bundler:** `POST /api/bundler`, JSON-RPC: `eth_chainId`, `eth_supportedEntryPoints`,
-  `eth_estimateUserOperationGas` (returns constants), `eth_sendUserOperation`,
+  `eth_sponsorUserOperation` (sponsor-signed `paymasterAndData` + the real gas fields),
+  `eth_estimateUserOperationGas` (real Sepolia estimates), `eth_sendUserOperation`,
   `eth_getUserOperationReceipt`, `eth_getUserOperationByHash`. It submits `handleOps` from
-  `RELAYER_PRIVATE_KEY` (an EOA with no balance) and serialises submissions in-process.
+  `RELAYER_PRIVATE_KEY` (the funded sponsor EOA: it fronts the gas, and the EntryPoint refunds it in
+  the same transaction from the paymaster's deposit) and serialises submissions in-process,
+  refusing to submit above a high gas cap ("gas patience").
   `shortcut: no ERC-7562 validation, this is trusted consortium infrastructure; rate-limit by IP`.
 
 ```ts
 // src/lib/ledger/account-client.ts: isomorphic (browser, Node scripts)
-export interface TxResult { txHash: Hex; blockNumber: number; feeWei: '0'; elapsedMs: number }
+export interface TxResult { txHash: Hex; blockNumber: number; feeWei: '0'; sponsorFeeWei: Hex; elapsedMs: number } // user pays 0; sponsorFeeWei is what the paymaster paid
 export interface AccountClient {
   readonly address: Address;
   readonly signer: Es256Signer;
@@ -566,7 +574,7 @@ export function createAccountClient(args: {
 `createAccountClient` follows `LEDGER_MODE`/`NEXT_PUBLIC_LEDGER_MODE`: the memory client posts signed
 ops to `POST /api/dev/ledger/op`, the chain client sends UserOps (first op carries `initCode` when the
 account is not deployed). **One conformance test suite runs against both**, so swapping modes is
-risk-free. Fallback if 4337 cannot work on a zero-gas chain by the A3-S3 go/no-go: same account
+risk-free. Fallback if 4337 or the paymaster cannot work on Sepolia by the A3-S3 go/no-go: same account
 contract and signature scheme, an `execute(op, signature)` entry point submitted by the relayer
 ("AA-lite", no EntryPoint). Say so in the pitch; do not hide it.
 
@@ -647,15 +655,17 @@ Parse **lazily**, on first use, never at import. CI builds without secrets.
 | --- | --- | --- |
 | `NEXT_PUBLIC_APP_URL` | client | the Render URL |
 | `NEXT_PUBLIC_LEDGER_MODE` | client | `memory` (dev, tests) or `chain` |
-| `NEXT_PUBLIC_LEDGER_CHAIN_ID` | client | `24024` |
-| `NEXT_PUBLIC_ENTRY_POINT_ADDRESS` | client | canonical v0.7 address unless the spike says otherwise |
+| `NEXT_PUBLIC_LEDGER_CHAIN_ID` | client | `11155111` (Sepolia) |
+| `NEXT_PUBLIC_ENTRY_POINT_ADDRESS` | client | canonical v0.7 `0x0000000071727De22E5E9d8BAf0edAc6f37da032`, already on Sepolia |
 | `NEXT_PUBLIC_ACCOUNT_FACTORY_ADDRESS` | client | after deploy |
 | `NEXT_PUBLIC_DEMO_MODE` | client | `1` shows `/dev/identity` and the operator identity import |
 | `LEDGER_MODE` | server | `memory` or `chain`; `memory` is refused in production |
-| `LEDGER_RPC_URL` | server | the consortium node's HTTPS RPC |
+| `LEDGER_RPC_URL` | server | the Alchemy Sepolia RPC URL |
 | `LEDGER_CONTRACT_ADDRESS` | server | `Ledger.sol` after deploy |
 | `LEDGER_DEPLOY_BLOCK` | server | lower bound for log queries |
-| `RELAYER_PRIVATE_KEY` | server | bundler EOA, no funds needed. A3 generates it |
+| `PAYMASTER_ADDRESS` | server | `VerifyingPaymaster.sol` after deploy |
+| `LEDGER_RPC_URL_BACKUP` | server | optional second Sepolia provider; check-demo verifies both |
+| `RELAYER_PRIVATE_KEY` | server | the **sponsor** key: funds the paymaster and relays handleOps. A3 generates it and funds it from faucets |
 | `DATABASE_URL` | server | pooled Postgres |
 | `SESSION_SECRET` | server | 32+ random bytes, base64. A4 generates it |
 
@@ -713,8 +723,8 @@ Write these limits into the landing, the Q&A and `/verify` technical details. Do
 - **Same certificate, two readers = linkable** by its hash. One fresh certificate and key per request,
   and one key per certificate, limit this.
 - **Replay until expiry** of a shared link. Challenge mode is a stretch goal.
-- **Consortium trust:** a quorum of members decides who is an employer. In the demo all four
-  validators run on one host, and the browser trusts one gateway. Reading from several member nodes
+- **Consortium trust:** a quorum of members decides who is an employer. The demo runs on public
+  Sepolia and the browser trusts one gateway (our read routes). Reading from several RPC providers
   is the roadmap.
 - **Lose the device, lose the vault.** Re-requesting a certificate is cheap. Multi-owner recovery for
   holders is the roadmap.

@@ -17,9 +17,9 @@ Template: `.env.example`. Local defaults (memory ledger, demo mode on) run the a
 | --- | --- | --- | --- |
 | `DATABASE_URL` | server | A4's human: free Neon or Render Postgres, **pooled** URL | before A4-S1 migrates |
 | `SESSION_SECRET` | server | A4: `openssl rand -base64 32` | before A4 auth works |
-| `RELAYER_PRIVATE_KEY` | server | A3: throwaway key with no funds | chain mode only |
-| `LEDGER_RPC_URL` | server | A3 after the network is up (HTTPS, proxied to the VPS) | M3 |
-| `LEDGER_CONTRACT_ADDRESS`, `LEDGER_DEPLOY_BLOCK` | server | printed by `pnpm chain:deploy` | M3 |
+| `RELAYER_PRIVATE_KEY` | server | A3: the Sepolia sponsor key, funded from faucets (≥ 0.5 ETH) | chain mode only |
+| `LEDGER_RPC_URL` | server | A3: the Alchemy Sepolia RPC URL | M3 |
+| `LEDGER_CONTRACT_ADDRESS`, `LEDGER_DEPLOY_BLOCK`, `PAYMASTER_ADDRESS` | server | printed by `pnpm chain:deploy` | M3 |
 | `NEXT_PUBLIC_ACCOUNT_FACTORY_ADDRESS` | client | printed by `pnpm chain:deploy` | M3 |
 | `NEXT_PUBLIC_APP_URL` | client | the Render URL | after the first deploy |
 | `LEDGER_MODE`, `NEXT_PUBLIC_LEDGER_MODE` | both | `memory` locally, `chain` on Render (memory is refused in production) | M3 |
@@ -32,8 +32,8 @@ On Render set every variable in the dashboard. After changing a `NEXT_PUBLIC_*` 
 
 | Task | Who | Needed by |
 | --- | --- | --- |
-| Linux VPS (4 vCPU, 8 GB, Docker, ports 80/443, hostname) or a laptop behind a Cloudflare Tunnel | A3's human | A3 chain lane |
-| Docker and Foundry on every machine that touches contracts or the network | A3's human | A3-S1, S3, S4 |
+| An Alchemy account (Sepolia API key) and faucet rounds for the sponsor wallet | A3's human | A3-S1 |
+| Foundry on every machine that touches contracts | A3's human | A3-S3, S4 |
 | Postgres `DATABASE_URL` | A4's human | A4-S1 |
 | Mirror the repo to a personal GitHub, create the Render Blueprint, set env vars, add the CD secrets | A1's human | before the first deploy |
 | Three Chrome profiles: Registrar, Holder, Recruiter (incognito), zoom 125 % | presenter's team | rehearsals |
@@ -52,7 +52,7 @@ On Render set every variable in the dashboard. After changing a `NEXT_PUBLIC_*` 
 
 1. `git pull`, then `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
 2. Run the product locally on `LEDGER_MODE=memory` through `demo.md`'s flow and list what breaks.
-3. Switch to `LEDGER_MODE=chain` against the network once A3's chain lane is up (M3).
+3. Switch to `LEDGER_MODE=chain` against Sepolia once A3's chain lane is up (M3).
 4. Hand the break list back to the owning lane:
    `Run docs/plan/SESSION.md as the orchestrator for agent A<N>, resume, fix: <list>`.
 5. Run A1's carry-over backlog (bottom of `agent-1-design.md`): the ledger fixture swap, the visual
@@ -62,4 +62,4 @@ On Render set every variable in the dashboard. After changing a `NEXT_PUBLIC_*` 
 
 - T−15 and T−2: run `pnpm check:demo`.
 - Keep the demo-pack files and the backup video at hand; browsers signed in per `demo.md`.
-- Fallback order: phone hotspot, the laptop-hosted network, the backup video.
+- Fallback order: the backup RPC provider, phone hotspot, the backup video.
