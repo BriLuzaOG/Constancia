@@ -5,8 +5,12 @@ services:
     plan: free
     region: oregon
     branch: main
-    buildCommand: npm install -g pnpm@12.15.0 && pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm start
+    # Render's build image mounts the global node_modules read-only, so `npm install -g`
+    # fails with EROFS. npx resolves pnpm into the writable npx cache instead.
+    # --prod=false keeps devDependencies: `next build` needs them.
+    buildCommand: npx --yes pnpm@12.15.0 install --frozen-lockfile --prod=false && npx --yes pnpm@12.15.0 run build
+    # pnpm is never installed on the runtime image; npm is always present.
+    startCommand: npm start
     healthCheckPath: /
     # Deploys are triggered by .github/workflows/cd.yml after the build gate passes.
     # Leaving this on would deploy twice per push: once before CI, once after.
