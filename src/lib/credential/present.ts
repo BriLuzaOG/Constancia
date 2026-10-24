@@ -64,6 +64,15 @@ const parseSegment = (segment: string, what: string): JsonObject => {
   }
 };
 
+/** The presentation string up to and including the last '~': what sd_hash covers. */
+export function presentationPrefix(credential: string, reveal: ClaimName[]): string {
+  const [issuerJwt, ...rest] = credential.split('~');
+  const chosen = rest
+    .filter((encoded) => encoded.length > 0)
+    .filter((encoded) => reveal.includes(parseDisclosure(encoded).name));
+  return [issuerJwt, ...chosen, ''].join('~');
+}
+
 export async function presentCredential(args: {
   credential: string; // issuance form
   holder: Es256Signer;
@@ -74,11 +83,7 @@ export async function presentCredential(args: {
   now?: Date;
   cvSet?: string;
 }): Promise<string> {
-  const [issuerJwt, ...rest] = args.credential.split('~');
-  const chosen = rest
-    .filter((encoded) => encoded.length > 0)
-    .filter((encoded) => args.reveal.includes(parseDisclosure(encoded).name));
-  const prefix = [issuerJwt, ...chosen, ''].join('~');
+  const prefix = presentationPrefix(args.credential, args.reveal);
   const iat = Math.floor((args.now ?? new Date()).getTime() / 1000);
   const payload = {
     iat,

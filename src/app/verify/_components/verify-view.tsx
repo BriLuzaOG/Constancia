@@ -19,6 +19,7 @@ import {
 } from '../_lib/load-input';
 import type { LoadedInput } from '../_lib/types';
 import { useVerification } from '../_lib/use-verification';
+import { CvView } from './cv-view';
 import { ReceiptPanel } from './receipt-panel';
 import { TechnicalDetails } from './technical-details';
 import { VerdictPanel } from './verdict-panel';
@@ -46,7 +47,7 @@ export function VerifyView() {
       sampleLookup.current = lookup;
       setError(null);
       setInput(next);
-      void verification.run(next, lookup);
+      if (next.kind === 'presentation') void verification.run(next, lookup);
     },
     [verification.run],
   );
@@ -80,6 +81,11 @@ export function VerifyView() {
   const { rows, verdict, decoded, requests, running } = verification;
   const resolvedCount = rows.filter((row) => RESOLVED.has(row.status)).length;
   const latest = [...rows].reverse().find((row) => row.status !== 'PENDING');
+
+  const reset = () => {
+    setInput(null);
+    setPasted('');
+  };
 
   if (!input) {
     return (
@@ -135,6 +141,14 @@ export function VerifyView() {
     );
   }
 
+  if (input.kind === 'cv') {
+    return (
+      <div className="mt-8">
+        <CvView input={input} onReset={reset} />
+      </div>
+    );
+  }
+
   return (
     <div className="mt-8 flex flex-col gap-8">
       <LineField
@@ -157,9 +171,6 @@ export function VerifyView() {
           />
         ))}
       </CheckList>
-      {input.kind === 'cv' ? (
-        <p className="text-body">Verified CV files open in the CV view.</p>
-      ) : null}
       {verdict ? (
         <VerdictPanel
           verdict={verdict}
@@ -180,13 +191,7 @@ export function VerifyView() {
         <TechnicalDetails verdict={verdict} decoded={decoded} />
       ) : null}
       <div>
-        <Button
-          variant="quiet"
-          onClick={() => {
-            setInput(null);
-            setPasted('');
-          }}
-        >
+        <Button variant="quiet" onClick={reset}>
           Check another
         </Button>
       </div>

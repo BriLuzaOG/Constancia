@@ -83,7 +83,7 @@ function HolderLines({ verdict }: { verdict: AuthenticVerdict }) {
   );
 }
 
-function IssuerPanel({ verdict }: { verdict: AuthenticVerdict }) {
+export function IssuerPanel({ verdict }: { verdict: AuthenticVerdict }) {
   const { claims, hiddenCount, issuer } = verdict;
   return (
     <Panel title="Read from the signed certificate">
