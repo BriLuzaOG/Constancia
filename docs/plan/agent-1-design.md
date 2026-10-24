@@ -304,3 +304,19 @@ Do:
 
 Commit: "docs: submission metadata, description and README".
 ```
+
+---
+
+## Carry-over backlog (left by the autopilot run of S0 to S3 and S9)
+
+Run these in a follow-up session (`resume`), in this order:
+
+1. **Fixture swap** (after A3-S2 is on main): `src/app/ledger/_lib/load-state.ts` returns
+   `fetchNetworkState()`; delete `fixture.ts`; check `/ledger/operator` against the real
+   `createAccountClient` and the `member:` signers from `/dev/identity`.
+2. **Visual pass on S1 to S3**, skipped in autopilot: screenshots at 1440, 1280x720, 390, the
+   impeccable detector, the finish reviewer. Regenerate `.impeccable/design.json` with the documenter
+   and run the `reviewer` in DESIGN.md audit mode. Folds into A1-S8 (items 2, 4, 6).
+3. **Submission** (A1-S9 leftovers): `deploy-url` in `platanus-hack-project.jsonc` once H7 gives the
+   Render URL; the root `README.md` once the team decides on the banana rule.
+4. The landing drop goes to `/verify`, which is A2's: check it works end to end at A1-S7.

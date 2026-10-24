@@ -92,6 +92,7 @@ rules, lookup shape). Write them as a reusable conformance suite
 (src/lib/ledger/conformance.ts) that A3-S6 will also run against the chain client.
 Gate. Commit: "feat(ledger): memory ledger, gateway routes and DID resolution for local development".
 Post "memory ledger is on main: LEDGER_MODE=memory" with the exports.
+Then A1 swaps `src/app/ledger/_lib/load-state.ts` to `fetchNetworkState()` and deletes `fixture.ts` (see agent-1 "Carry-over backlog").
 ```
 
 ## A3-S3 · Account abstraction spike [M] · T+2:30 · ~135 min · HARD STEP · GO/NO-GO at T+4:45
