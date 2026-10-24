@@ -261,3 +261,30 @@ keep coming → /ledger shows the colour vanish → restart). Then help A2, A4 a
 integration bugs and run the code-review skill on your diff since M0.
 Commit: "fix(ledger): …".
 ```
+
+## A3 · Hand-offs from A2 once the ledger is real [M] · after A3-S2 and A3-S6 are on main
+
+Source: `docs/plan/progress/A2.md` (A2-S7 partial). A2 could not do these without your work, so they
+land on A3. Nothing here changes a contract.
+
+```
+1. public/demo/sample.json (A3-S7): { credential, holderJwk } as in contracts §4.5 (Sample). Check
+   that `runAttack` from src/lib/credential/attacks.ts works on it: the four attacks must fail at
+   TOKEN, SIGNATURE, ISSUER, HOLDER and the untouched sample must verify AUTHENTIC.
+2. Real-ledger run of /verify with LEDGER_MODE=chain (A2-S7 item 1): present the sample and a fresh
+   certificate, and fix anything that differs from the memory ledger: timestamps (anchoredAt,
+   addedAt, removedAt, revokedAt are epoch seconds), key windows, head.time (the verifier uses it as
+   "now"). If the fix is in src/lib/credential/ or src/app/verify/, tell A2 or make it in a tiny
+   commit and say so in chat.
+3. POST /api/ledger/lookup must answer 503 {error:'LEDGER_UNREACHABLE'} when the node is down:
+   /verify turns any non-OK answer into "Cannot verify right now". Test with the node stopped.
+4. Once lookup and A4's GET /api/shares/:id are real, remove the TEMP pieces in src/app/verify:
+   delete _lib/fixture.ts, the "Try a sample" button and the `?fixture=1` switch in
+   _components/verify-view.tsx. _lib/lookup-client.ts already posts to /api/ledger/lookup.
+5. Revoke moment: revoke a certificate with the account client, press "Check again" on /verify, and
+   confirm the Ledger record row turns red with "The employer revoked this certificate".
+6. Known leftover: `pnpm lint` fails on pedantic oxlint warnings in src/lib/credential and
+   src/app/verify (no-await-in-loop, toSorted, test style). Fix them only if the team wants lint in
+   the gate again.
+Commit: "fix(ledger): verify against the real ledger".
+```
