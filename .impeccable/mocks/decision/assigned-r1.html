@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>ScholarKey — Grading Report</title>
+<style>
+:root{--paper:#FBFBF8;--ink:#15171B;--rule:#C9CCD1;--ok:#1E7F4F;--bad:#C62F2F;--foil:#B7C9E2}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;background:var(--paper);color:var(--ink);font-family:"Public Sans",system-ui,sans-serif;overflow:hidden;padding:18px}
+.sheet{height:100%;border:10px solid transparent;border-image:repeating-linear-gradient(45deg,#d9e2df 0 2px,#fbfbf8 2px 4px) 10;display:grid;grid-template-columns:230px 1fr}
+aside{border-right:1px solid var(--rule);padding:28px 22px;display:flex;flex-direction:column;gap:26px}
+.wm{font:800 30px/1 system-ui;letter-spacing:.02em}
+.lbl{font:600 12px/1.2 system-ui;letter-spacing:.14em;text-transform:uppercase;color:#5c6168}
+.num{font:600 22px/1.2 ui-monospace,monospace}
+.qr{width:150px;height:150px;background:repeating-conic-gradient(var(--ink) 0 25%,var(--paper) 0 50%) 0 0/30px 30px;border:6px solid var(--ink)}
+.foil{width:96px;height:96px;border-radius:50%;background:conic-gradient(#b7c9e2,#d8c7e6,#c7e6dc,#e6e0c7,#b7c9e2);border:1px solid var(--rule)}
+.issue{margin-top:auto;border:2px solid var(--ink);padding:16px;font:700 22px/1.1 system-ui}
+main{padding:34px 44px;display:grid;grid-template-rows:auto 1fr;gap:26px}
+h1{font:800 76px/0.98 system-ui;letter-spacing:-.025em;max-width:980px}
+.cols{display:grid;grid-template-columns:1fr 520px;gap:40px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:0 0 10px;border-bottom:2px solid var(--ink)}
+td{padding:22px 0;border-bottom:1px solid var(--rule);font-size:24px;font-weight:600}
+td.m{color:#9aa0a6;font-family:ui-monospace,monospace;font-size:22px}
+td.k{width:60px;text-align:center;font-size:30px}
+.plot{border:1px solid var(--ink);position:relative;display:grid;place-items:center}
+.page{width:360px;height:255px;border:2px solid var(--ink);position:relative;background:#fff}
+.page::before{content:"";position:absolute;inset:26px 120px 26px 26px;border:1px dashed var(--ink)}
+.page::after{content:"";position:absolute;right:20px;top:26px;width:80px;bottom:26px;background:repeating-linear-gradient(0deg,var(--foil) 0 3px,#fff 3px 7px)}
+.co{position:absolute;width:40px;height:40px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font:700 22px system-ui;background:var(--paper)}
+.drop{position:absolute;bottom:26px;left:26px;right:26px;border:2px dashed var(--ink);padding:18px;text-align:center;font:700 26px/1.2 system-ui}
+</style></head><body><div class="sheet">
+<aside><div class="wm">ScholarKey</div><div><div class="lbl">Report no.</div><div class="num">SK·0x7f3a…c41e</div></div><div class="qr"></div><div class="foil"></div><div class="issue">Issue credentials →</div></aside>
+<main><h1>Diplomas that prove themselves. Drop one and watch it get examined.</h1>
+<div class="cols">
+ <table><tr><th class="lbl">Examination</th><th class="lbl">Measured</th><th class="lbl">Result</th></tr>
+ <tr><td>1 · Embedded credential</td><td class="m">— bytes</td><td class="k">○</td></tr>
+ <tr><td>2 · Issuer key, from its domain</td><td class="m">— domain</td><td class="k">○</td></tr>
+ <tr><td>3 · Signature (ES256K)</td><td class="m">— ms</td><td class="k">○</td></tr>
+ <tr><td>4 · Document seal</td><td class="m">— KB hashed</td><td class="k">○</td></tr>
+ <tr><td>5 · Public anchor</td><td class="m">— block</td><td class="k">○</td></tr></table>
+ <div class="plot"><div class="page"></div>
+  <span class="co" style="left:64px;top:70px">1</span><span class="co" style="left:300px;top:70px">2</span><span class="co" style="left:64px;top:300px">3</span><span class="co" style="left:420px;top:300px">4</span>
+  <div class="drop">Drop a diploma PDF on the plot</div></div>
+</div></main></div></body></html>

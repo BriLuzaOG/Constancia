@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>ScholarKey — Departures Board</title>
+<style>
+:root{--hall:#ECEAE4;--board:#1E2124;--flap:#2A2D31;--seam:#141618;--ink:#F2EFE6;--sign:#F5C400;--go:#2FA84F;--stop:#D7372F}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;background:var(--hall);font-family:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",system-ui,sans-serif;color:var(--board);overflow:hidden}
+nav{display:flex;align-items:center;justify-content:space-between;padding:22px 56px}
+.wm{display:flex;gap:3px}.wm b,.f{display:inline-grid;place-items:center;background:var(--flap);color:var(--ink);font:700 22px/1 "Big Shoulders Display",Impact,sans-serif;width:22px;height:30px;position:relative;border-radius:2px}
+.wm b::after,.f::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--seam)}
+nav ul{display:flex;gap:36px;list-style:none;font-size:17px;font-weight:600}
+.board{margin:0 40px;background:var(--board);border-radius:6px;padding:28px 32px 30px;display:grid;grid-template-columns:1fr 400px;gap:32px;box-shadow:0 2px 0 #0003}
+.row{display:flex;gap:4px;margin-bottom:6px}
+.big .f{width:58px;height:84px;font-size:68px}
+.hdr{display:flex;gap:16px;color:#8b8f94;font:600 14px/1 system-ui;letter-spacing:.12em;margin:22px 0 10px}
+.dep{display:grid;grid-template-columns:92px 1fr 260px 190px;gap:10px;align-items:center;margin-bottom:6px}
+.dep .cells{display:flex;gap:3px}.dep .f{width:26px;height:36px;font-size:26px}
+.st .f{color:#fff}.ok .f{background:var(--go)}.wait .f{background:var(--sign);color:var(--board)}.blank .f{color:transparent}
+.pass{background:#fff;border-radius:10px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.pass::before{content:"";position:absolute;left:0;right:0;top:118px;border-top:3px dashed #c9c6be}
+.pass h3{font:800 34px/1.05 "Big Shoulders Display",Impact,sans-serif;text-transform:uppercase}
+.slot{border:3px dashed var(--board);border-radius:8px;height:230px;display:grid;place-items:center;text-align:center;font-size:24px;font-weight:700}
+.signs{display:flex;gap:20px;margin:22px 40px 0}
+.sign{flex:1;display:flex;align-items:center;gap:20px;padding:22px 28px;border-radius:6px;font:800 34px/1 "Big Shoulders Display",Impact,sans-serif;text-transform:uppercase}
+.sign.y{background:var(--sign)}.sign.k{background:var(--board);color:var(--ink)}
+.arrow{width:54px;height:54px;border-radius:4px;display:grid;place-items:center;font-size:40px;background:var(--board);color:var(--sign)}
+.k .arrow{background:var(--sign);color:var(--board)}
+</style></head><body>
+<nav><div class="wm"><b>S</b><b>C</b><b>H</b><b>O</b><b>L</b><b>A</b><b>R</b><b>K</b><b>E</b><b>Y</b></div>
+<ul><li>Verify a diploma</li><li>For institutions</li><li>How it works</li><li>Trust model</li></ul></nav>
+<section class="board">
+ <div>
+  <div class="row big"><span class="f">D</span><span class="f">I</span><span class="f">P</span><span class="f">L</span><span class="f">O</span><span class="f">M</span><span class="f">A</span><span class="f">S</span><span class="f" style="opacity:0">.</span><span class="f">T</span><span class="f">H</span><span class="f">A</span><span class="f">T</span></div>
+  <div class="row big"><span class="f">V</span><span class="f">E</span><span class="f">R</span><span class="f">I</span><span class="f">F</span><span class="f">Y</span><span class="f" style="opacity:0">.</span><span class="f">T</span><span class="f">H</span><span class="f">E</span><span class="f">M</span><span class="f">S</span><span class="f">E</span><span class="f">L</span><span class="f">V</span><span class="f">E</span><span class="f">S</span></div>
+  <div class="hdr"><span style="width:92px">CODE</span><span style="flex:1">CHECK</span><span style="width:260px">MEASURED</span><span style="width:190px">STATUS</span></div>
+  <div class="dep"><div class="cells"><span class="f">0</span><span class="f">1</span></div><div class="cells"><span class="f">T</span><span class="f">O</span><span class="f">K</span><span class="f">E</span><span class="f">N</span></div><div class="cells"><span class="f">4</span><span class="f">M</span><span class="f">S</span></div><div class="cells st ok"><span class="f">V</span><span class="f">E</span><span class="f">R</span><span class="f">I</span><span class="f">F</span><span class="f">I</span></div></div>
+  <div class="dep"><div class="cells"><span class="f">0</span><span class="f">2</span></div><div class="cells"><span class="f">I</span><span class="f">S</span><span class="f">S</span><span class="f">U</span><span class="f">E</span><span class="f">R</span></div><div class="cells"><span class="f">U</span><span class="f">-</span><span class="f">A</span><span class="f">V</span><span class="f">I</span><span class="f">L</span><span class="f">A</span></div><div class="cells st ok"><span class="f">V</span><span class="f">E</span><span class="f">R</span><span class="f">I</span><span class="f">F</span><span class="f">I</span></div></div>
+  <div class="dep"><div class="cells"><span class="f">0</span><span class="f">3</span></div><div class="cells"><span class="f">S</span><span class="f">I</span><span class="f">G</span><span class="f">N</span></div><div class="cells"><span class="f">E</span><span class="f">S</span><span class="f">2</span><span class="f">5</span><span class="f">6</span><span class="f">K</span></div><div class="cells st ok"><span class="f">V</span><span class="f">E</span><span class="f">R</span><span class="f">I</span><span class="f">F</span><span class="f">I</span></div></div>
+  <div class="dep"><div class="cells"><span class="f">0</span><span class="f">4</span></div><div class="cells"><span class="f">S</span><span class="f">E</span><span class="f">A</span><span class="f">L</span></div><div class="cells"><span class="f">2</span><span class="f">1</span><span class="f">K</span><span class="f">B</span></div><div class="cells st wait"><span class="f">C</span><span class="f">H</span><span class="f">E</span><span class="f">C</span><span class="f">K</span></div></div>
+  <div class="dep"><div class="cells"><span class="f">0</span><span class="f">5</span></div><div class="cells"><span class="f">A</span><span class="f">N</span><span class="f">C</span><span class="f">H</span><span class="f">O</span><span class="f">R</span></div><div class="cells blank"><span class="f">.</span><span class="f">.</span><span class="f">.</span></div><div class="cells blank"><span class="f">.</span><span class="f">.</span><span class="f">.</span><span class="f">.</span></div></div>
+ </div>
+ <aside class="pass"><h3>Boarding pass<br>for your diploma</h3><div class="slot">Drop a diploma PDF<br>to verify it here</div><div style="font-size:15px;color:#6b6f74">Checked in your browser. The file never leaves it.</div></aside>
+</section>
+<div class="signs"><div class="sign y"><span class="arrow">→</span>Institutions: issue credentials</div><div class="sign k"><span class="arrow">↓</span>How a diploma verifies itself</div></div>
+</body></html>

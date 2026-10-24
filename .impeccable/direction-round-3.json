@@ -1,0 +1,111 @@
+{
+  "title": "Choose ScholarKey's visual world",
+  "question": "Back to the first hand, as you asked: the Departures Board or Chromatic Interference?",
+  "options": [
+    {
+      "id": "assigned-r2",
+      "kind": "assigned",
+      "label": "Departures Board",
+      "kicker": "THE ROLL",
+      "lineage": "Solari split-flap departure boards and airport wayfinding signage",
+      "thesis": "Every diploma is a departure: the board flips each check to VERIFIED, row by row, in public.",
+      "palette": [
+        "#ECEAE4",
+        "#1E2124",
+        "#F2EFE6",
+        "#F5C400",
+        "#2FA84F",
+        "#D7372F"
+      ],
+      "materials": [
+        "split-flap modules",
+        "airport wayfinding signage",
+        "terminal concrete"
+      ],
+      "viewport": "A full-width split-flap board heads the page: the ScholarKey line flips in, a white boarding-pass slot reads 'Drop a diploma PDF to verify', and a yellow signage panel points institutions to 'Issue credentials'.",
+      "risk": "Split-flap is a known novelty; it turns gimmick if flaps move without real events or the board swallows body text.",
+      "raised": [
+        {
+          "from": "challenger-ascii",
+          "raise": "One character-cell grid: every flap, label and numeral on the board snaps to it; nothing floats."
+        },
+        {
+          "from": "challenger-phosphor",
+          "raise": "States print themselves: status is flap text in its row, never a pill, toast or badge."
+        },
+        {
+          "from": "challenger-bebop",
+          "raise": "Running order is visible: every check and section carries a code (SK 01, GATE 2) like a flight number."
+        },
+        {
+          "from": "challenger-flyer",
+          "raise": "One calm white panel: the boarding-pass drop slot is the only white surface on the board."
+        },
+        {
+          "from": "challenger-plankton",
+          "raise": "Blank at rest: flaps move only for real events, never as ambient decoration."
+        },
+        {
+          "from": "challenger-forge",
+          "raise": "Measured rows: each check reports real numbers (ms, bytes hashed, block height) in tabular figures."
+        }
+      ],
+      "html": ".impeccable/mocks/decision/assigned-r2.html",
+      "comp": ".impeccable/mocks/decision/assigned-r2.webp"
+    },
+    {
+      "id": "model-pick-r2",
+      "kind": "pick",
+      "label": "Chromatic Interference",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Caracas kinetic art: Cruz-Diez physichromies and the Maiquetía airport floor",
+      "thesis": "Truth resolves when you look closely: fine-line colour fields that settle into a verdict, from the art of Caracas.",
+      "palette": [
+        "#F7F6F2",
+        "#111111",
+        "#E4002B",
+        "#00A651",
+        "#0047BB",
+        "#FFD100"
+      ],
+      "materials": [
+        "op-art fine-line fields",
+        "white modernist concrete",
+        "campus terrazzo"
+      ],
+      "viewport": "A white page cut by a band of dense vertical colour lines; the headline in a plain grotesk, the drop zone a gap in the lines that turns solid green when a diploma verifies.",
+      "risk": "Fine-line moiré fights readability and projector scaling, and it leans on a protected artist's language: it must stay a grammar, never a copy.",
+      "html": ".impeccable/mocks/decision/pick-r2.html",
+      "comp": ".impeccable/mocks/decision/pick-r2.webp"
+    }
+  ],
+  "reroll": {
+    "registers": [
+      "safer",
+      "bolder"
+    ]
+  },
+  "buildPath": {
+    "value": "code",
+    "toggle": false
+  },
+  "canon": true,
+  "canonCard": {
+    "kind": "canon",
+    "label": "The category standard",
+    "thesis": "A clean trust SaaS page: verify academic credentials instantly.",
+    "palette": [
+      "#FFFFFF",
+      "#0B1F3A",
+      "#16A34A",
+      "#E5E7EB"
+    ],
+    "materials": [
+      "clean grid",
+      "shield and check iconography"
+    ],
+    "viewport": "Centred headline over an upload box, three feature cards below, logos strip.",
+    "risk": "Indistinguishable from every credential startup by design."
+  },
+  "steer": true
+}
