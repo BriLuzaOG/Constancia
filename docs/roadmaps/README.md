@@ -29,7 +29,7 @@ flowchart LR
 
 | Stage | Nombre | Ventana | Objetivo | Habilita |
 |---|---|---|---|---|
-| [0](stage-0-mvp-demo.md) | MVP de demo | 32 h (deadline 25 oct 10:00) | Demo end-to-end en vivo | Todo |
+| [0](stage-0-mvp-demo.md) | MVP de demo | 32 h (deadline 25 oct 10:00) | **Backend cerrado**; demo por API/CLI | Todo |
 | [1](stage-1-evidencia-durable.md) | Evidencia durable | Semana 1-2 | WORM real, OTel, tests | Confianza operativa |
 | [2](stage-2-testigos-reales.md) | Testigos reales | Semana 3-4 | Gossip más replicación de blobs | Detección distribuida |
 | [3](stage-3-criptografia-produccion.md) | Criptografía de producción | Semana 4-6 | PQ auditado, KMS/HSM, rotación | Uso comercial |

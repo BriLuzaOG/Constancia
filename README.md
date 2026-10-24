@@ -176,8 +176,18 @@ El lint incluye la regla **`import/no-cycle`**: un ciclo de imports rompe la arq
 | Ruta | Método | Qué hace |
 |---|---|---|
 | `/health` | GET | Estado del servicio |
-| `/` | GET | Dashboard (build de Vite+, en producción) |
-| `/events` | GET | Stream SSE (pendiente) |
+| `/api/events` | POST | Sella un evento |
+| `/api/sessions` | GET | Lista sesiones |
+| `/api/sessions/:id` | DELETE | Borra la sesión completa |
+| `/api/sessions/:id/state` | GET | Cuarentena y cabeza |
+| `/api/sessions/:id/events` | GET | Eventos de la sesión |
+| `/api/sessions/:id/verify` | GET | Verificación de la cadena |
+| `/api/anchor/:id` | POST | Ancla la raíz ahora |
+| `/api/chaos/:id/tamper/:seq` | POST | Altera un evento |
+| `/api/chaos/:id/delete/:seq` | POST | Borra un evento |
+| `/api/chaos/:id/kill` | POST | Activa el kill switch |
+| `/events` | GET | Stream SSE |
+| `/` | GET | Dashboard (placeholder) |
 
 En desarrollo el front corre en `5173` y hace proxy de `/api` y `/events` a `3000`. En producción Nest sirve el build estático desde el mismo origen: **una URL, cero CORS**.
 
@@ -200,18 +210,22 @@ Copia `.env.example` a `.env`. Las principales:
 - [x] Backend NestJS ESM con rspack (dos bundles)
 - [x] API con `/health` y servicio de estáticos
 - [x] Worker standalone sin HTTP
-- [x] Front React 19 con Vite+ y Tailwind 4
+- [x] Sealer con hash-chain por sesión
+- [x] Persistencia en archivos + cabeza de sesión
+- [x] Verificador de alteración y borrado (incluido el último evento)
+- [x] Merkle root por sesión
+- [x] Anchor job + contrato `EvidenceRegistry.sol` (dry-run sin credenciales)
+- [x] Agente rogue + kill switch
+- [x] Alertas Telegram con fallback a log
+- [x] SSE en `/events`
 - [x] Oxlint + Oxfmt + Vitest en el backend
-- [x] `vp check` en el front
 - [x] Dockerfiles multi-stage y compose con Podman
 - [x] Regla `import/no-cycle` en el lint
-- [ ] Sealer (hash-chain + CAS)
-- [ ] Merkle batcher
-- [ ] Anchor job + contrato
-- [ ] Verificador
-- [ ] Consola del Caos
-- [ ] Agente rogue + kill switch
-- [ ] Alertas Telegram
+- [ ] Anchor on-chain real (requiere faucet, wallet y contrato)
+- [ ] Telegram real (requiere token)
+- [ ] Firma ML-DSA de la raíz
+- [ ] Snapshot forense
+- [ ] Front completo (fuera de alcance: solo backend)
 
 ## Documentación
 

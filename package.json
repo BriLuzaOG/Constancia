@@ -18,11 +18,12 @@
     "start:worker": "node dist/worker.js",
     "dev:web": "pnpm --filter web dev",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint src/ web/src/ --type-aware --max-warnings=0",
-    "lint:fix": "oxlint src/ web/src/ --type-aware --fix",
+    "lint": "oxlint src/ --type-aware --max-warnings=0",
+    "lint:fix": "oxlint src/ --type-aware --fix",
     "format": "oxfmt \"src/**/*.ts\"",
     "format:check": "oxfmt --check \"src/**/*.ts\"",
-    "test": "vitest run"
+    "test": "vitest run",
+    "swarm": "node scripts/swarm.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^12.2.0",
