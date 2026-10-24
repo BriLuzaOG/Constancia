@@ -1,0 +1,19 @@
+{
+  "@context": {
+    "constancia": "https://constancia.example/vocab#",
+    "EmploymentCredential": "constancia:EmploymentCredential",
+    "Employee": "constancia:Employee",
+    "givenName": "constancia:givenName",
+    "familyName": "constancia:familyName",
+    "nationalId": "constancia:nationalId",
+    "jobTitle": "constancia:jobTitle",
+    "department": "constancia:department",
+    "employmentType": "constancia:employmentType",
+    "startDate": "constancia:startDate",
+    "endDate": "constancia:endDate",
+    "employedNow": "constancia:employedNow",
+    "workCountry": "constancia:workCountry",
+    "salaryMonthlyUsd": "constancia:salaryMonthlyUsd",
+    "salaryBand": "constancia:salaryBand"
+  }
+}

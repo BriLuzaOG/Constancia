@@ -1,3 +1,6 @@
+import { concatBytes } from '@noble/hashes/utils.js';
+import { keccak256 } from 'viem';
+import { fromB64u } from './jws';
 import type { Hex, P256Jwk, P256PrivateJwk } from './types';
 
 export interface Es256Signer {
@@ -6,27 +9,60 @@ export interface Es256Signer {
   sign(message: Uint8Array): Promise<Uint8Array>; // 64-byte r||s, hashes with SHA-256
 }
 
-export async function generateSigner(_opts?: {
+const ALGORITHM = { name: 'ECDSA', namedCurve: 'P-256' } as const;
+const SIGN_PARAMS = { name: 'ECDSA', hash: 'SHA-256' } as const;
+
+const publicPart = ({ x, y }: P256Jwk): P256Jwk => ({ kty: 'EC', crv: 'P-256', x, y });
+
+/** x and y as 32-byte big-endian each, hashed with keccak256 (what the account contract stores). */
+export function keyIdOf(jwk: P256Jwk): Hex {
+  return keccak256(concatBytes(fromB64u(jwk.x), fromB64u(jwk.y)));
+}
+
+export function signerFromKey(privateKey: CryptoKey, jwk: P256Jwk): Es256Signer {
+  const publicJwk = publicPart(jwk);
+  return {
+    keyId: keyIdOf(publicJwk),
+    jwk: publicJwk,
+    sign: async (message) =>
+      new Uint8Array(await crypto.subtle.sign(SIGN_PARAMS, privateKey, message as BufferSource)),
+  };
+}
+
+export async function generateSigner(opts?: {
   extractable?: boolean;
 }): Promise<{ signer: Es256Signer; privateKey: CryptoKey }> {
-  throw new Error('not implemented: A2-S1');
+  const { privateKey, publicKey } = await crypto.subtle.generateKey(
+    ALGORITHM,
+    opts?.extractable ?? false,
+    ['sign', 'verify'],
+  );
+  const jwk = (await crypto.subtle.exportKey('jwk', publicKey)) as P256Jwk;
+  return { signer: signerFromKey(privateKey, jwk), privateKey };
 }
 
 export async function signerFromPrivateJwk(
-  _jwk: P256PrivateJwk,
-  _opts?: { extractable?: boolean },
+  jwk: P256PrivateJwk,
+  opts?: { extractable?: boolean },
 ): Promise<Es256Signer> {
-  throw new Error('not implemented: A2-S1');
-}
-
-export function keyIdOf(_jwk: P256Jwk): Hex {
-  throw new Error('not implemented: A2-S1');
+  const privateKey = await crypto.subtle.importKey(
+    'jwk',
+    { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y, d: jwk.d },
+    ALGORITHM,
+    opts?.extractable ?? false,
+    ['sign'],
+  );
+  return signerFromKey(privateKey, jwk);
 }
 
 export async function verifyEs256(
-  _jwk: P256Jwk,
-  _message: Uint8Array,
-  _signature: Uint8Array,
+  jwk: P256Jwk,
+  message: Uint8Array,
+  signature: Uint8Array,
 ): Promise<boolean> {
-  throw new Error('not implemented: A2-S1');
+  if (signature.length !== 64) return false;
+  const publicKey = await crypto.subtle.importKey('jwk', publicPart(jwk), ALGORITHM, false, [
+    'verify',
+  ]);
+  return crypto.subtle.verify(SIGN_PARAMS, publicKey, signature as BufferSource, message as BufferSource);
 }
