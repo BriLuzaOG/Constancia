@@ -15,7 +15,9 @@
     "lint": "oxlint src/ --type-aware --max-warnings=0",
     "lint:fix": "oxlint src/ --type-aware --fix",
     "format": "oxfmt src/",
-    "format:check": "oxfmt --check src/"
+    "format:check": "oxfmt --check src/",
+    "chain:sponsor": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/new-sponsor.ts",
+    "chain:status": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/status.ts"
   },
   "dependencies": {
     "@noble/curves": "^2.4.0",
