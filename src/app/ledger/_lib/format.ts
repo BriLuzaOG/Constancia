@@ -1,0 +1,28 @@
+import type { NetworkState } from '@/lib/ledger/types';
+
+// the four validators are the four line inks; the letter keeps it from being colour alone
+const INKS = [
+  { bg: 'bg-line-red', letter: 'R' },
+  { bg: 'bg-line-blue', letter: 'B' },
+  { bg: 'bg-line-green', letter: 'G' },
+  { bg: 'bg-line-yellow', letter: 'Y' },
+] as const;
+
+export function inkOf(state: NetworkState, account: string) {
+  const index = state.validators.findIndex(
+    (validator) => validator.address.toLowerCase() === account.toLowerCase(),
+  );
+  return index === -1 ? null : INKS[index % INKS.length];
+}
+
+export function nameOf(state: NetworkState, account: string): string {
+  return (
+    state.members.find((member) => member.account.toLowerCase() === account.toLowerCase())?.name ??
+    'Unknown'
+  );
+}
+
+export function ageLabel(unixSeconds: number, nowMs: number): string {
+  const seconds = Math.max(0, Math.round(nowMs / 1000 - unixSeconds));
+  return seconds < 60 ? `${seconds} s ago` : `${Math.round(seconds / 60)} min ago`;
+}
