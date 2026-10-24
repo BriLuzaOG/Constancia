@@ -14,6 +14,7 @@ entirely.** This folder is the whole plan:
 | [agent-5-holder.md](agent-5-holder.md) | A5 · Vault, requests, share builder, Verified CV portal, Fake Letter Lab |
 | [demo.md](demo.md) | The 3-minute demo script, pre-flight checklist, fallbacks, Q&A |
 | [SESSION.md](SESSION.md) | How every build session runs: Sonnet plans, Haiku implements, Opus reviews |
+| [PARALLEL.md](PARALLEL.md) | Autopilot: six parallel sessions, minimal product, ready-to-paste prompts |
 
 Product truth: [PRODUCT.md](../../PRODUCT.md). Visual truth: `DESIGN.md` (the Chromatic Interference
 world, built and kept; A1-S0 renames it and A1-S1/S2 extend it).
