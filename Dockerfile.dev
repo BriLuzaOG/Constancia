@@ -1,0 +1,23 @@
+# Imagen de DESARROLLO. Incluye devDependencies a propósito: Vite+, tsx y
+# TypeScript viven aquí. No se usa para producción.
+#
+# En docker-compose.dev.yml el código se monta como volumen, así que esta
+# imagen solo aporta runtime y node_modules.
+FROM node:26-alpine AS dev
+RUN apk add --no-cache bash libc6-compat openssl
+RUN npm install -g pnpm@12.3.4
+WORKDIR /app
+
+ENV NODE_ENV=development \
+    NPM_CONFIG_UPDATE_NOTIFIER=false \
+    NPM_CONFIG_FUND=false
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY web/package.json web/
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+# 3000 API, 5173 Vite+.
+EXPOSE 3000 5173
+CMD ["pnpm", "start:dev"]

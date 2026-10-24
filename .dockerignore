@@ -1,0 +1,29 @@
+# Dependencias y builds del host: se reconstruyen dentro de la imagen.
+node_modules
+**/node_modules
+dist
+**/dist
+
+# Control de versiones y metadatos.
+.git
+.gitignore
+.github
+
+# Documentación y assets que no van al runtime.
+docs
+*.md
+!README.md
+project-logo.png
+
+# Secretos y entorno local.
+.env
+.env.*
+!.env.example
+
+# Tooling y ruido.
+coverage
+**/coverage
+.vscode
+.idea
+*.log
+tmp

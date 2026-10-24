@@ -1,0 +1,33 @@
+# Dependencias
+node_modules/
+**/node_modules/
+
+# Builds
+dist/
+**/dist/
+build/
+**/build/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Datos locales
+data/
+**/data/
+*.db
+*.sqlite
+
+# Logs y cobertura
+*.log
+coverage/
+**/coverage/
+
+# Editor y sistema
+.vscode/
+.idea/
+.DS_Store
+
+# Podman / Docker locales
+.podman/

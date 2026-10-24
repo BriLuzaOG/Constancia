@@ -1,0 +1,24 @@
+packages:
+  - web
+
+# Vite+ redirige `vite` a su propio core mediante catalog.
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@1.4.0
+  vite-plus: 1.4.0
+
+overrides:
+  # TypeScript 7 (tsgo) rompe los decoradores de Nest en este stack.
+  typescript: ^6.0.3
+  vite@*: "catalog:"
+
+peerDependencyRules:
+  allowAny:
+    - vite
+  allowedVersions:
+    vite: "*"
+
+allowBuilds:
+  '@scarf/scarf': false
+
+minimumReleaseAgeExclude:
+  - viem@2.57.11
