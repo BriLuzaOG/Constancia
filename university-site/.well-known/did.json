@@ -1,0 +1,23 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:waraira-university.onrender.com",
+  "verificationMethod": [
+    {
+      "id": "did:web:waraira-university.onrender.com#key-1",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:waraira-university.onrender.com",
+      "publicKeyJwk": {
+        "kty": "EC",
+        "crv": "secp256k1",
+        "x": "UJKbdMGgSVS3i0tgNel6XgeKWg8o7JbVR7_ums6AOsA",
+        "y": "MdPGhjlzkm4EnmN8sbX0CjbaworxdmlowwwjE_OjiQQ"
+      }
+    }
+  ],
+  "assertionMethod": [
+    "did:web:waraira-university.onrender.com#key-1"
+  ]
+}
