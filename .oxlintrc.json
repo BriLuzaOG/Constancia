@@ -155,5 +155,5 @@
     "vitest/prefer-to-have-length": "warn",
     "vitest/valid-expect": "error"
   },
-  "ignorePatterns": ["node_modules", "dist", "coverage", "web/dist", "web/node_modules", "*.d.ts", "*.js", "*.mjs", "*.cjs"]
+  "ignorePatterns": ["node_modules", "dist", "coverage", ".next", "*.d.ts", "*.js", "*.mjs", "*.cjs"]
 }
