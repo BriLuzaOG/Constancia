@@ -1,288 +1,306 @@
-# Agent 1 · Design system, landing, demo university, polish, submission
+# Agent 1 · Pivot foundation, design kit, landing, `/ledger`, polish, submission
 
-**Mission:** own ScholarKey's look and the first impression. You lay the foundation everyone builds
-on (S0), turn the chosen visual world into tokens and components (S1), build the landing (S3–S4),
-write `DESIGN.md`, and run the polish, audit and submission passes at the end.
+**Mission:** swap the repo from the old product to Constancia in one fast, green commit so everyone
+can start (S0), extend the design kit the new surfaces need (S1), build the landing (S2, S4), the
+public ledger page (S3), then polish, audit and submit.
 
-**The world (chosen by the team through impeccable):** *Chromatic Interference*, from Caracas kinetic
-op-art. Fields of fine pure-colour lines interfere at rest and **resolve into one solid colour** when
-a diploma is examined. The full direction contract lives in the landing surface brief:
-`sh .claude/skills/impeccable/scripts/impeccable surface-brief read src/app/page.tsx`. The chosen
-composition sketch is `.impeccable/mocks/decision/pick-r2.html`.
+**The world (kept):** *Chromatic Interference*, from Caracas kinetic op-art. Fields of fine
+pure-colour lines interfere at rest and **resolve into one solid colour** when a certificate is
+examined. The tokens, `LineField`, primitives and `/dev/kit` are already built and stay. The
+direction contract is the landing surface brief
+(`sh .claude/skills/impeccable/scripts/impeccable surface-brief read src/app/page.tsx`), which A1-S2
+rewrites for the new copy. New meaning for the old material: **a hidden claim is a solid bar that
+the line field has resolved into; a shown claim is open lines**, and on `/ledger` the four
+validators are the four line inks, so the chain is literally the line field.
 
 **You own:** `package.json`, lockfile, `next.config.ts`, `tsconfig.json`, CI, `render.yaml`,
 `src/lib/env.ts`, `src/lib/handoff.ts`, `src/app/layout.tsx`, `globals.css`, `src/app/page.tsx`,
-`src/app/_landing/`, `src/app/dev/kit/`, `src/components/ui/`, `university-site/`, brand assets,
+`src/app/_landing/`, `src/app/dev/kit/`, `src/app/ledger/**`, `src/components/ui/`, brand assets,
 submission files.
 
 Every step: follow the rules in [README.md](README.md) (gate, `simplify`, commit, push, chat).
 
 ---
 
-## A1-S0 · Foundation · T+0:00 · ~45 min · BLOCKS EVERYONE
+## A1-S0 · Pivot foundation [M] · T+0:00 · ~60 min · BLOCKS EVERYONE
 
 ```
-You are Agent 1 on ScholarKey (hackathon, 20h, 5 parallel agents). This step unblocks the other
-four agents. Be fast and exact.
+You are Agent 1 on Constancia (hackathon, 5 parallel agents). The repo still holds the old product
+(ScholarKey: diplomas, did:web, Privy). This step swaps the foundation so the other four agents can
+start from a compiling tree. Be fast and exact.
 
 Read: AGENTS.md, PRODUCT.md, docs/plan/README.md, docs/plan/contracts.md (all of it).
 Skills (repo .claude/skills only): nextjs-16, typescript, zod-4, ponytail.
 
 Do:
-1. chmod +x .claude/skills/impeccable/scripts/impeccable (commit the mode change; the launcher
-   currently fails with "Permission denied" for everyone).
-2. Install every dependency the team needs, in one go, so nobody else touches the lockfile:
-   runtime: jose@6 @noble/curves@2 @noble/hashes@2 viem@2 pdf-lib @pdf-lib/fontkit qrcode zod@4
-            @privy-io/react-auth server-only @prisma/client@7 @prisma/adapter-pg@7 pg
-            + Privy's current server SDK (check docs.privy.io: @privy-io/node or @privy-io/server-auth)
-   dev:     prisma@7 vitest @types/qrcode @types/pg solc@0.8.28
-   If pnpm blocks build scripts, add only what's needed to pnpm-workspace.yaml allowBuilds.
-3. Tests: vitest.config.ts (node env, `@` → src), script "test": "vitest run" (pass with no tests),
-   and add a "Test" step (pnpm test) to .github/workflows/cd.yml after Typecheck.
-4. src/lib/env.ts: lazy zod-validated getters per contracts §10 (serverEnv() parses on first call;
-   client vars read via explicit process.env.NEXT_PUBLIC_* so Next inlines them). Never parse at
-   import: CI builds without secrets. Write .env.example with every var and a one-line comment.
-5. Stubs: create every module and export in contracts §4–§7, §9 (guards) and §11 with the exact
-   types. Function bodies: throw new Error('not implemented: A<n>-S<m>'). UI primitives (§11):
-   simple working semantic markup, no styling yet. src/lib/handoff.ts: implement for real (5 lines).
-   Mark server-only modules with `import 'server-only'`.
-6. Replace the create-next-app boilerplate: layout metadata (title "ScholarKey", description from
-   PRODUCT.md), lang="en", page.tsx = a minimal "ScholarKey" placeholder. Delete unused public/*.svg.
-7. .gitignore: add src/generated/, .impeccable/review/, .impeccable/build/.
+1. Dependencies, in one go so nobody else touches the lockfile:
+   remove  @privy-io/node @privy-io/react-auth pdf-lib @pdf-lib/fontkit
+   add     @sd-jwt/core plus whatever peer packages its README asks for (A2 may replace it later)
+   keep    everything else (viem, jose, zod, qrcode, prisma, pg, @noble/*, server-only, solc ...)
+   If pnpm blocks build scripts, allow only what is needed in pnpm-workspace.yaml.
+2. Delete the old product: university-site/, src/lib/did/, src/lib/privy/, src/lib/chain/,
+   src/lib/issuer/, every file in src/lib/credential/, the waraira-university service in
+   render.yaml, and tests of deleted code. Keep src/components/ui, src/lib/env.ts, handoff.ts,
+   src/app/dev/kit, the design tokens.
+3. src/lib/env.ts: lazy zod getters per contracts §10 (serverEnv() parses on first call;
+   clientEnv() reads explicit process.env.NEXT_PUBLIC_* literals so Next inlines them). Never parse
+   at import: CI builds without secrets. Rewrite .env.example with every var, a one-line comment
+   each, and placeholders that satisfy the schema where the value only exists after deploy
+   (zero address, block 0). Update env.test.ts.
+4. Typed stubs for every module and export in contracts §4.5, §6, §7 and §8's server helpers
+   (src/lib/server/session.ts: requireEmployer + HttpError; src/lib/server/db.ts). Types are real.
+   Function bodies: throw new Error('not implemented: A<n>-S<m>') naming the owner and step.
+   Server-only modules start with `import 'server-only'`. Create only the files contracts §2
+   assigns to A2 (src/lib/credential/*) and A3 (src/lib/ledger/*) plus A4's src/lib/server/*.
+5. UI: change DropZone to the contracts §11 props (accept default '.sdjwt,.json,.txt', onFile and
+   onFiles, multiple). Add stubs with plain semantic markup for ClaimList, Timeline and QrBlock.
+   Update /dev/kit only enough to compile.
+6. Rename: layout metadata (title "Constancia", description from PRODUCT.md), a placeholder
+   page.tsx, the name and description lines of DESIGN.md and .impeccable/design.json. Do not touch
+   tokens. No other DESIGN.md edits until S1/S2.
+7. .gitignore: add demo-pack/, docker/ledger/data/, contracts/out/ if not committed.
+8. docs/plan/progress/A1.md: add the A1-S0 row.
 
-Verify: pnpm lint && pnpm typecheck && pnpm test && pnpm build all pass.
-Commit: "chore: foundation (deps, env, test runner, contract stubs)". Push. Post "M0 is on main".
+Verify: pnpm lint && pnpm typecheck && pnpm test && pnpm build all pass with no env set.
+Commit: "chore: pivot foundation (deps, env, contract stubs, DropZone and primitive stubs)". Push.
+Post "M0 is on main".
 ```
 
-## A1-S1 · Design world: tokens, line-field material, primitives, kit · T+0:45 · ~105 min
+## A1-S1 · Kit extension: ClaimList, Timeline, QrBlock [M] · T+1:00 · ~60 min
 
 ```
-You are Agent 1 on ScholarKey. Build the design system everyone will use.
+You are Agent 1 on Constancia. Give the three new primitives the world.
 
-Read: PRODUCT.md, docs/plan/contracts.md §11, the landing surface brief
-(sh .claude/skills/impeccable/scripts/impeccable surface-brief read src/app/page.tsx),
-.impeccable/mocks/decision/pick-r2.html (chosen sketch).
-Skills: impeccable (run its Setup with --target src/components/ui; read reference/craft-floor.md
-before editing), tailwind-4, react-19, typescript, nextjs-16.
+Read: DESIGN.md, contracts §11, PRODUCT.md, the landing surface brief.
+Skills: impeccable (Setup with --target src/components/ui; read reference/craft-floor.md before
+editing), tailwind-4, react-19, typescript.
 
-Build:
-1. Fonts with next/font: a heavy expanded grotesk for display and a plain grotesk for text
-   (candidate: Archivo from Omnibus-Type, variable with the 'wdth' axis, so both come from one
-   family), and Geist Mono (already wired) for IDs and hashes. Confirm the choice against the brief.
-2. globals.css (Tailwind 4 @theme): paper #F7F6F2, ink #111111, muted ink, rule colour; line inks
-   red #E4002B, blue #0047BB, green #00A651, yellow #FFD100; text-safe darks for red and green
-   (AA on paper); focus colour; type scale with a fluid display size (~56→104px); spacing rhythm;
-   rule widths (2px, 4px); motion durations and easing; line pitch (≥4px at display sizes).
-   Square corners everywhere. No shadows, gradients-as-decoration, glass or glow.
-3. src/components/ui/line-field.tsx: the signature material. Layered vertical line fields
-   (repeating-linear-gradient layers moved only with transform). States: rest (gentle pointer
-   parallax: colour shifts with viewpoint), scanning (layers drift, optional progress 0–5),
-   resolved-ok (floods solid green), resolved-fail (floods red), resolved-unavailable (yellow/ink).
-   600ms ease-out resolution, no bounce. prefers-reduced-motion: static lines, instant change.
-   Pause work when off-screen. Must survive a projector: no shimmering moiré at 1280×720.
-4. Give every §11 primitive the world: CheckRow uses a small line chip that interferes while
-   CHECKING and resolves to a solid square + mark (✓ ✕ ! —) + word when done; never colour alone.
-   Verdict is a resolved band with a huge word. DropZone is a white gap cut into a line field with a
-   4px ink border; the whole page reacts when a file is dragged over it. Buttons: rectangular, 3px
-   ink border, ink-filled primary. Mono shortens hashes in the middle with copy-on-click.
-5. src/app/dev/kit/page.tsx: every primitive in every state, with buttons to cycle LineField and
-   CheckRow states. This page is the visual reference for A4/A5 until DESIGN.md lands.
+Build, in the existing line-field language:
+1. ClaimList: one row per claim. 'shown' = open line field with the value in ink. 'hidden' = the
+   row's line field resolved into a solid ink bar with the word "Hidden" (never colour alone, never
+   a blurred value). 'on'/'off' = a square 3px-ink toggle with the label, keyboard operable,
+   aria-pressed. A caption line for "7 more claims stay hidden".
+2. Timeline: a vertical spine; each entry has a small line chip (reuse the CheckRow chip) that
+   resolves to a solid square + mark when VERIFIED; employer, title, dates; a gap is a hatched
+   interval labelled "Gap · 4 months"; an overlap is a doubled spine labelled "Overlap".
+3. QrBlock (client): qrcode to a canvas or SVG, black on paper, square, 4px ink border, the label
+   under it, optional Copy link. Must scan from a phone at 1280x720 on a projector.
+4. /dev/kit: add every new primitive in every state, with toggles.
+5. DESIGN.md: add ClaimList, Timeline and QrBlock to the components section (keep the
+   "Provisional" line until A1-S2 finishes).
 
-6. Provisional DESIGN.md: once the kit passes review, run impeccable's documenter over the BUILT
-   kit (globals.css, src/components/ui, /dev/kit) → DESIGN.md + .impeccable/design.json, with a
-   first line saying "Provisional until A1-S3: tokens and primitives are final; landing patterns
-   come in S3". See docs/plan/SESSION.md "DESIGN.md steps". A4/A5 start UI before S3 and need it.
-
-Verify: screenshots of /dev/kit at 1440, 1280×720 and 390 into .impeccable/review/; run
-sh .claude/skills/impeccable/scripts/impeccable detect --json src/components/ui src/app/dev/kit
-and fix mechanical findings. Gate.
-Commit: "feat(ui): design tokens, line-field material, primitives kit; provisional DESIGN.md".
-Post "kit is at /dev/kit, provisional DESIGN.md is on main".
+Verify: screenshots of /dev/kit at 1440, 1280x720 and 390 into .impeccable/review/; run
+sh .claude/skills/impeccable/scripts/impeccable detect --json src/components/ui src/app/dev/kit and
+fix mechanical findings. Gate.
+Commit: "feat(ui): claim list, timeline and QR primitives". Post "kit extension is on main".
 ```
 
-## A1-S2 · Demo university site · T+2:30 · ~45 min
+## A1-S2 · Landing first viewport + signature interaction + final DESIGN.md [M] · T+2:00 · ~2 h
 
 ```
-You are Agent 1 on ScholarKey. The demo university needs its own domain to host its did.json,
-because did:web trust comes from the institution's domain, not ours.
+You are Agent 1 on Constancia. Build the landing's first viewport. This build becomes the
+reference for the final DESIGN.md.
 
-Read: docs/plan/contracts.md §5 (did.json shape), README.md H5.
-Skills: ponytail.
+Read: the landing surface brief, PRODUCT.md, /dev/kit components.
+Skills: impeccable (new-work, "Build with full commitment", code-led; craft-floor before edits; then
+"Inspect and finish"), nextjs-16, react-19, tailwind-4, typescript.
 
-Build:
-1. university-site/index.html + styles.css: homepage of "Universidad Waraira", clearly labelled
-   "Fictional demo institution for ScholarKey". It must look like a plausible university site with
-   its OWN plain institutional identity (not ScholarKey's world). Include a "Digital credentials"
-   section that links to /.well-known/did.json and says diplomas are verifiable at ScholarKey.
-2. university-site/.well-known/did.json: a valid placeholder document (dummy key). A4-S7 replaces
-   it with the real one after onboarding.
-3. render.yaml: add a static site service publishing ./university-site (name it so the URL is
-   waraira-university.onrender.com, or note the real URL). Header for /.well-known/did.json:
-   Content-Type application/json. If Render doesn't publish dot-folders, add a rewrite.
-4. Ask your human to deploy it (H5), then check:
-   curl -sS https://<site>/.well-known/did.json | head  →  must return the JSON over HTTPS.
-
-Commit: "feat(demo): Universidad Waraira demo site hosting its did.json". Post the site URL.
-```
-
-## A1-S3 · Landing first viewport + signature interaction + DESIGN.md · T+3:15 · ~2 h
-
-```
-You are Agent 1 on ScholarKey. Build the landing's first viewport. This build becomes the
-reference for DESIGN.md.
-
-Read: the landing surface brief (direction contract, memorable moment, constraints),
-.impeccable/mocks/decision/pick-r2.html, PRODUCT.md, /dev/kit components.
-Skills: impeccable (new-work → "Build with full commitment", code-led; craft-floor before edits;
-then "Inspect and finish"), nextjs-16, react-19, tailwind-4, typescript.
+First, rewrite the landing surface brief (sh .../impeccable surface-brief write ...) for the new
+product: the same direction (Chromatic Interference), new copy and memorable moment: a certificate's
+lines resolve to solid colour when verified, and a hidden claim is a solid bar.
 
 Build src/app/page.tsx + src/app/_landing/*:
-1. FIRST VIEWPORT exactly as the contract says: nav (wordmark; Verify · Institutions · How it
-   works), huge left headline (e.g. "Diplomas that prove themselves."), one short lead line, a
-   full-bleed LineField band across the lower half, the DropZone cut into the band on the right,
-   "Verify a diploma" (primary) and "Issue credentials" (outline) bottom-left.
-2. The action works: dropping a PDF calls setHandoffFile(file) and navigates to /verify; the band
-   locks into alignment briefly first (the start of chromatic resolution). The pointer parallax
-   runs at rest.
-3. Keep pdf-lib, viem and Privy out of this route's bundle.
+1. FIRST VIEWPORT: nav (wordmark; Verify · Employers · Vault · Ledger), huge left headline (e.g.
+   "Work letters that prove themselves."), one short lead line ("Employers issue. You share one fact
+   at a time. Anyone can check it in seconds."), a full-bleed LineField band across the lower half,
+   the DropZone cut into the band on the right ("Drop a certificate to check it"), "Check a
+   certificate" (primary) and "Open your vault" (outline) bottom-left, and a small text link "I'm
+   an employer" to /employer.
+2. The action works: dropping a credential file calls setHandoffFile(file) and navigates to /verify;
+   the band locks into alignment briefly first. Pointer parallax runs at rest.
+3. Keep viem, jose and the credential library out of this route's bundle.
 
-Finish (impeccable "Inspect and finish", max two inspection rounds): capture desktop.png (1440),
-mobile.png (390) and projector.png (1280×720) into .impeccable/review/; run the detector; run the
-finish reviewer (shipped agent if your harness has it, else
-.claude/skills/impeccable/reference/degraded/finish-reviewer.md in a fresh pass); apply the fix
-batch; then run the documenter (shipped agent, or reference/degraded/documenter.md +
-reference/document.md) to UPDATE the provisional DESIGN.md + .impeccable/design.json into the final
-version (drop the "Provisional" line) from the BUILT world (tokens,
-LineField, primitives, motion, the certificate guidance: white paper, ink, a vertical line-ink
-verification stub on the right edge with QR, display face for the graduate's name).
+Finish (impeccable "Inspect and finish", max two rounds): capture desktop.png (1440), mobile.png
+(390) and projector.png (1280x720) into .impeccable/review/; run the detector; run the finish
+reviewer (shipped agent, else reference/degraded/finish-reviewer.md in a fresh pass); apply the fix
+batch; then run the documenter (reference/degraded/documenter.md + reference/document.md) to
+UPDATE DESIGN.md + .impeccable/design.json into the final version: drop the "Provisional" line,
+remove every diploma/certificate-PDF reference, add the claim, timeline and QR patterns.
 
 Gate. Commit: "feat(landing): first viewport with chromatic resolution; DESIGN.md".
-Post "DESIGN.md is live: every UI step follows it now".
+Post "DESIGN.md is final: every UI step follows it now".
 ```
 
-## A1-S4 · Landing below the fold · T+5:15 · ~2 h
+## A1-S3 · Ledger pages: `/ledger` and `/ledger/operator` [M] · T+4:00 · ~2 h
 
 ```
-You are Agent 1 on ScholarKey. Finish the landing story under the first viewport.
+You are Agent 1 on Constancia. The consortium is the product's most visible claim. Make it a
+page people stop at.
 
-Read: DESIGN.md, the landing surface brief, PRODUCT.md (Positioning, Evidence on Hand, Principles).
+Read: DESIGN.md, contracts §6 (NetworkState, LedgerReader), §7 (AccountClient), PRODUCT.md.
+Skills: impeccable (Operate/Read mix; craft-floor), nextjs-16, react-19, tailwind-4, typescript.
+Needs: A3-S2 (memory ledger, GET /api/ledger/state, createAccountClient). Until it lands, mock
+NetworkState with a fixture in src/app/ledger/_lib/fixture.ts and delete it afterwards.
+
+Build:
+1. /ledger (public, no sign-in): kicker "Consortium ledger". Poll fetchNetworkState every 2 s.
+   - Head: block number and age, "4 validators · 2 s blocks · fees: none".
+   - The block strip: the last 16 blocks as vertical lines in the colour of their proposer. Map the
+     four validators to the four line inks (red, blue, green, yellow); a validator that stops
+     proposing simply disappears from the field. Caption: "No single company runs this ledger."
+   - Members and the quorum ("2 of 4 must approve an employer"), each with its validator colour.
+   - Accredited employers with status chips (ACTIVE, PENDING n/quorum, SUSPENDED), name and short
+     account.
+   - Recent anchors: block, time, issuer, shortened hash. Caption: "Hashes only. No names, no
+     claims."
+   - A short, honest "How this ledger is run" paragraph (contracts §12: demo runs all validators on
+     one host).
+   - No wallet, gas or seed-phrase words anywhere. Technical details disclosure may show chain ID,
+     contract and EntryPoint addresses.
+2. /ledger/operator (only when NEXT_PUBLIC_DEMO_MODE=1, else 404): "Act as a member". A picker of
+   local signer names beginning "member:" (A3's /dev/identity imports them), the list of PENDING
+   employers with approvals n/quorum, and Approve / Suspend buttons that call
+   createAccountClient({ signer }).approve/suspend. Show the TxResult as CheckRows (Signed · Written
+   to the ledger · fee 0). Label the page "Demo only: in production each member signs on its own
+   device".
+3. States: loading, ledger unreachable (calm, specific), empty.
+
+Verify at 1440, 1280x720 and 390; detector; gate.
+Commit: "feat(ledger): public network page and operator console".
+```
+
+## A1-S4 · Landing below the fold [S] · T+6:00 · ~75 min
+
+```
+You are Agent 1 on Constancia. Finish the landing story under the first viewport.
+
+Read: DESIGN.md, the landing surface brief, PRODUCT.md (Positioning, Evidence, Principles),
+contracts §12 (the limits).
 Skills: impeccable (Persuade pacing; craft-floor), nextjs-16, react-19, tailwind-4.
 
 Sections (author real copy; no invented customers, numbers or logos):
-1. "How a diploma proves itself": the five checks (token, issuer key from the university's own
-   domain, signature, document seal, public anchor), one plain sentence each, each with a resolved
-   line chip, plus an anatomy figure of the PDF (visible certificate · embedded signed token ·
-   byte seal · anchor) drawn in the world's language.
-2. "Three roles, one rule": University issues · Graduate keeps · Anyone verifies. The rule:
-   nobody but the graduate keeps the data.
-3. "What we never see": the literal database row ScholarKey keeps for a credential (credential
-   ID, institution, transaction hash, time) beside what it never stores (name, national ID,
-   program, honors, the PDF).
-4. "Trust model, honestly": the university's domain is the root of trust (did:web); the chain is a
-   blind witness; the maths runs in your browser. Limits: the domain must be online to verify; no
-   revocation in this MVP; key rotation is on the roadmap.
-5. "Why it matters": degree recognition for Venezuelans abroad. Use a sourced figure (R4V) with a
-   visible citation, or no number at all.
-6. Close: another line-band moment with the drop slot + "Issue credentials"; footer with team,
-   Platanus Hack 26 Caracas, and "All institutions and graduates shown are fictional".
-Vary density between sections; one spacing rhythm; more space above headings than below.
+1. "How a letter proves itself": the five checks (certificate, employer accredited by the
+   consortium, signature, bound to its holder, ledger record), one plain sentence each, with a
+   resolved line chip.
+2. "Show only what's needed": one certificate, two readers. A ClaimList in a fixed state: the
+   landlord sees "employed" and an income band; the consulate sees title and dates. Everything else
+   is a hidden bar.
+3. "Three roles, one rule": Employer issues · You hold · Anyone verifies. The rule: you decide what
+   each reader sees.
+4. "Why a consortium": employers and institutions accredit employers together; no single company
+   or public chain in the middle; the ledger holds hashes only.
+5. "One CV, every job": the Verified CV in one sentence and a small Timeline.
+6. "Limits, plainly": contracts §12 in four short lines (selective disclosure is not a zero-knowledge
+   proof; the ledger proves who said it, not that it is true; a shared link can be replayed until it
+   expires; lose the device, re-request).
+7. Close: another line-band moment with the drop slot; footer with team, Platanus Hack 26
+   Caracas, "All employers, members and people shown are fictional".
+Vary density between sections; one spacing rhythm; more space above headings than below. Any
+statistic needs a visible citation, or leave the number out.
 
 Verify: screenshots 1440/390, detector, gate.
-Commit: "feat(landing): story, trust model and privacy sections".
+Commit: "feat(landing): story, selective disclosure and consortium sections".
 ```
 
-## A1-S5 · Brand marks · T+7:15 · ~75 min
+## A1-S5 · Brand marks [S] · T+7:15 · ~30 min
 
 ```
-You are Agent 1 on ScholarKey. Make the brand assets.
+You are Agent 1 on Constancia. Make the brand assets.
 
-Read: DESIGN.md, landing brief ("Unresolved decisions": logo).
-Skills: impeccable, nextjs-16.
+Read: DESIGN.md. Skills: impeccable, nextjs-16.
 
 Build:
-1. Logo mark as SVG: a square of the four line inks with a key-shaped negative gap (or a better
-   idea in the same grammar); wordmark lockup. src/components/ui/logo.tsx +
-   public/brand/scholarkey-mark.svg. Use it in the nav.
-2. src/app/icon.svg (favicon), apple-icon.png, and an Open Graph image (next/og or static PNG).
-3. project-logo.png at the repo root: 1000×1000 PNG under 500 KB, made from the SVG with magick.
+1. Logo mark as SVG: four vertical bars in the four line inks where one bar has resolved to solid
+   ink (or a better idea in the same grammar), plus the wordmark lockup. src/components/ui/logo.tsx
+   and public/brand/constancia-mark.svg. Use it in the nav and the employer and vault chrome.
+2. src/app/icon.svg, apple-icon.png and an Open Graph image.
+3. project-logo.png at the repo root: 1000x1000 PNG under 500 KB made from the SVG with magick.
    Record provenance on every raster (impeccable embed-prompt: origin = generated from the SVG).
-4. Post the mark's path for A2 (certificate stub) and A4 (issuer chrome).
+4. Post the mark's path for A4 and A5.
 
-Gate. Commit: "feat(brand): ScholarKey mark, favicon, social image, project logo".
+Gate. Commit: "feat(brand): Constancia mark, favicon, social image, project logo".
 ```
 
-## A1-S6 · Issuer console polish · T+10:30 · ~90 min · after A4-S6
+## A1-S6 · Employer and vault polish [S] · T+7:45 · ~90 min · after A4-S5 and A5-S3
 
 ```
-You are Agent 1 on ScholarKey. Polish the issuer console. A4 has pushed and moved to production
-setup (A4-S7), so you may edit markup and classes in src/app/issuer/**. Do not change behaviour,
-data flow or API calls.
+You are Agent 1 on Constancia. Polish the employer console and the vault. A4 and A5 have pushed
+those flows, so you may edit markup and classes in src/app/employer/** and src/app/vault/**. Do not
+change behaviour, data flow or API calls. Tell A4 and A5 which files you touched.
 
-Read: DESIGN.md, PRODUCT.md (Principles: zero Web3 for humans).
+Read: DESIGN.md, PRODUCT.md (principle: zero Web3 for humans).
 Skills: impeccable (polish, clarify; Operate mode: restraint, the world lives in the details:
 a thin line strip in the header and the status chips), react-19, tailwind-4.
 
-Do: run impeccable polish and clarify on /issuer, /issuer/onboarding, /issuer/billing,
-/issuer/issue. Hierarchy, spacing, states (loading, locked, error, success), copy with no
-wallet/gas words. The issuance progress must read at a glance from 3 m away (projector).
-Verify at 1440 and 1280×720 signed in with the demo account. Detector. Gate.
-Commit: "style(issuer): polish pass". Tell A4 which files you touched.
+Do: run impeccable polish and clarify on /employer, /employer/onboarding, /employer/requests,
+/employer/issue, /vault, the request flow and the share builder. Hierarchy, spacing, states
+(loading, locked, error, success), copy with no wallet/gas words. The issuing rows must read at a
+glance from 3 m away (projector), and the share builder's "what the reader sees" preview must be
+the loudest thing on the page. Verify at 1440 and 1280x720 with demo data. Detector. Gate.
+Commit: "style(employer,vault): polish pass".
 ```
 
-## A1-S7 · Verify + Forgery Lab: motion and polish · T+12:30 · ~90 min · after A5-S6
+## A1-S7 · Verify, Verified CV and Lab: motion and polish [M] · T+9:15 · ~90 min · after A2-S5 and A5-S5
 
 ```
-You are Agent 1 on ScholarKey. Make the verifier the demo's showpiece. A5 has pushed; coordinate in
-chat, then edit markup/classes in src/app/verify/** without changing logic.
+You are Agent 1 on Constancia. Make the verifier the demo's showpiece. A2 owns /verify and A5 owns
+/verify/lab and /cv; coordinate in chat, then edit markup and classes without changing logic.
 
-Read: DESIGN.md, landing brief ("Memorable moment").
+Read: DESIGN.md, the landing brief ("Memorable moment").
 Skills: impeccable (animate, polish, adapt), react-19, tailwind-4.
 
 Do:
-1. Orchestrate chromatic resolution end to end: the band scans while checks run, each CheckRow
-   resolves in turn, and the band floods green (AUTHENTIC), floods red from the failing row
-   (NOT AUTHENTIC), or turns yellow/ink (CANNOT VERIFY RIGHT NOW). The Verdict lands last.
-2. Pacing for a projector (rows stay readable; real measured ms stay honest).
-3. Forgery Lab: the three attacks read as a sequence; the side-by-side previews are clear.
-4. adapt: 1280×720 and 1920×1080 projector, 390 mobile. Reduced motion.
-Verify with real PDFs (valid + each attack). Detector. Gate.
+1. Chromatic resolution end to end: the band scans while the checks run, each CheckRow resolves in
+   turn, and the band floods green (AUTHENTIC), floods red from the failing row (NOT AUTHENTIC), or
+   turns yellow/ink (CANNOT VERIFY RIGHT NOW). Hidden claims resolve into solid bars as the verdict
+   lands. The Verdict lands last.
+2. Verified CV: entries resolve one by one down the Timeline, then the whole band floods.
+3. Pacing for a projector (rows stay readable; the real measured ms stay honest).
+4. Fake Letter Lab: four attack cards read as a sequence; the changed-vs-original preview is clear.
+5. adapt: 1280x720 and 1920x1080 projector, 390 mobile (the link opens from a phone). Reduced motion.
+Verify with a real certificate, a real CV and each attack. Detector. Gate.
 Commit: "style(verify): chromatic resolution choreography and polish".
 ```
 
-## A1-S8 · Submission files · T+14:30 · ~60 min
+## A1-S8 · Final audit [M] · T+10:45 · ~45 min
 
 ```
-You are Agent 1 on ScholarKey. Prepare the hackathon submission.
+You are Agent 1 on Constancia. Last quality gate before feature freeze (T+11:30).
+
+Skills: impeccable (audit, adapt), nextjs-16.
+
+Do:
+1. impeccable audit on /, /verify, /verify/lab, /vault, /cv, /employer/**, /ledger (a11y,
+   performance, responsive).
+2. Detector over all UI; fix mechanical findings.
+3. Bundle check: viem, jose, the credential library and the ledger client load only on routes that
+   need them (dynamic import). The landing must stay light.
+4. Projector check at 1280x720 and 1920x1080: line pitch, contrast, verdict size.
+5. grep the whole repo for "wallet", "gas", "seed" in user-facing copy outside Technical details.
+6. If the system changed since S2, rerun the documenter so DESIGN.md matches the shipped world.
+Gate. Commit: "fix(ui): final audit fixes".
+```
+
+## A1-S9 · Submission files [M] · T+11:30 · ~60 min (runs beside the rehearsals)
+
+```
+You are Agent 1 on Constancia. Prepare the hackathon submission.
 
 Read: README.md (root, the organisers' template), platanus-hack-project.jsonc,
 project-description.md, PRODUCT.md, docs/plan/demo.md.
 Skills: ponytail.
 
 Do:
-1. platanus-hack-project.jsonc: name "ScholarKey", Spanish one-liner and description (no invented
+1. platanus-hack-project.jsonc: name "Constancia", Spanish one-liner and description (no invented
    claims), deploy-url = the Render URL.
-2. project-description.md: concise markdown (Spanish): problem, how it works (issuer → holder →
-   verifier), what's real in the demo, tech, team.
-3. README.md: concise; deploy URL; how to run locally; architecture in 5 bullets; links to docs/plan.
-   NOTE: the organisers' template says LLM-written READMEs must put a 🍌 after every word. Ask the
-   team whether a human writes the final README or you follow that rule. Do not decide silently.
-4. Confirm project-logo.png meets 1000×1000 and < 500 KB.
+2. project-description.md: concise markdown (Spanish): problem, how it works (employer → holder →
+   verifier), the consortium ledger, what is real in the demo, tech, team.
+3. README.md: concise; deploy URL; how to run locally (including `pnpm chain:up` and the memory
+   ledger); architecture in 5 bullets; links to docs/plan. NOTE: the organisers' template says
+   LLM-written READMEs must put a banana emoji after every word. Ask the team whether a human
+   writes the final README or you follow that rule. Do not decide silently.
+4. Confirm project-logo.png meets 1000x1000 and < 500 KB.
+5. Do not mention data-protection laws anywhere.
 
 Commit: "docs: submission metadata, description and README".
-```
-
-## A1-S9 · Final audit · T+15:30 · ~90 min
-
-```
-You are Agent 1 on ScholarKey. Last quality gate before feature freeze (T+18:00).
-
-Skills: impeccable (audit, adapt), nextjs-16.
-
-Do:
-1. impeccable audit on /, /verify, /verify/lab, /issuer/** (a11y, performance, responsive).
-2. Detector over all UI; fix mechanical findings.
-3. Bundle check: pdf-lib, viem and Privy load only on routes that need them (dynamic import).
-4. Projector check in a lit room at 1280×720 and 1920×1080: line pitch, contrast, verdict size.
-5. If the system changed since S3, rerun the documenter so DESIGN.md matches the shipped world.
-Gate. Commit: "fix(ui): final audit fixes".
 ```

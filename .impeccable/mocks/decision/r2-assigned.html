@@ -1,0 +1,15 @@
+<!doctype html><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0}body{width:1440px;height:900px;background:#D9D3C7;position:relative;overflow:hidden;font-family:Helvetica,Arial,sans-serif;color:#1D1B18}
+.wall{position:absolute;inset:0;display:grid;grid-template-columns:repeat(18,80px);grid-template-rows:repeat(11,80px);padding:10px 0 0 0}
+.b{margin:6px;background:#C4552D;box-shadow:inset -6px -6px 0 #9E3F1F,6px 6px 0 rgba(0,0,0,.18);position:relative}
+.b::after{content:"";position:absolute;inset:18px;border-radius:50%;background:#1D1B18}
+.b.o{background:#2F7FBF;box-shadow:inset -6px -6px 0 #1F5C90,6px 6px 0 rgba(0,0,0,.18)}.b.o::after{background:#F4EEDF}
+.b.y{background:#E0A82E;box-shadow:inset -6px -6px 0 #B58416,6px 6px 0 rgba(0,0,0,.18)}.b.y::after{background:#F4EEDF}
+.win{position:absolute;left:96px;top:96px;width:800px;height:520px;background:#D9D3C7;border:6px solid #1D1B18;padding:40px 48px;box-shadow:12px 12px 0 rgba(0,0,0,.25)}
+h1{font-size:104px;line-height:.92;font-weight:900;letter-spacing:-3px}
+.btns{position:absolute;left:48px;bottom:40px;display:flex;gap:16px}
+.btn{background:#1D1B18;color:#F4EEDF;font-size:24px;font-weight:700;padding:20px 32px}.btn.s{background:none;color:#1D1B18;border:4px solid #1D1B18}
+.nav{position:absolute;left:96px;top:30px;font-size:28px;font-weight:900;letter-spacing:6px}
+</style><div class="wall" id="w"></div><div class="nav">CONSTANCIA</div>
+<div class="win"><h1>A work letter that proves itself.</h1><div class="btns"><div class="btn">Verify a certificate</div><div class="btn s">I'm an employer</div></div></div>
+<script>const w=document.getElementById('w');for(let r=0;r<11;r++)for(let c=0;c<18;c++){const d=document.createElement('div');d.className='b'+(c>=13&&c<=17&&r>=1&&r<=5&&(c-13+r)%2==0?' o':'')+((c==15&&r>=6&&r<=9)?' y':'');w.appendChild(d)}</script>

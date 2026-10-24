@@ -29,7 +29,7 @@ Every build session runs this way, for every agent and every step.
 
 ## For the orchestrator: the protocol (follow it exactly)
 
-You are the orchestrator and planner for agent **A<N>** on ScholarKey. You plan, dispatch, gate,
+You are the orchestrator and planner for agent **A<N>** on Constancia. You plan, dispatch, gate,
 commit and report. The `implementer` subagent writes the code; the `reviewer` subagent reviews it.
 You write code yourself only under the escalation rules below.
 
@@ -47,8 +47,9 @@ You write code yourself only under the escalation rules below.
 - Read `AGENTS.md`, `PRODUCT.md`, `docs/plan/README.md`, `docs/plan/contracts.md`, your
   `docs/plan/agent-<n>-*.md`, and `docs/plan/progress/A<N>.md` (create it from the template at the
   bottom if missing).
-- **Not A1 and M0 not on main** (`src/lib/env.ts` missing)? Stop. Tell the human to do their H0
-  tasks (README) and come back when A1 posts "M0".
+- **Not A1 and M0 not on main** (`docs/plan/progress/A1.md` has no `A1-S0 | done` row)? Stop. Tell
+  the human to do their H0 tasks (README) and come back when A1 posts "M0". Exception: A3-S1 only
+  touches `docker/ledger/` and `scripts/chain/`, so it starts at T+0:00 without M0.
 - **Pick the step:** the one the human named, or the first one not done in the progress file.
 - **Dependencies:** for each thing the step needs from another agent, check it's real
   (`rg "not implemented: A3-S2" src` returns nothing). If it isn't ready, plan against the stub with
@@ -145,8 +146,8 @@ Send to `implementer`: *"Run the simplify skill on these changed files (not test
 - **Haiku is stuck:** the same packet fails the same check twice, or the reviewer flags the same
   MUST-FIX twice → you implement that part.
 - **Hard steps:** implement the core yourself from the start; Haiku writes the tests and the
-  mechanical parts. These are A1-S1 and A1-S3 (design world), A2-S2 (byte seal), A3-S2 (Privy
-  raw-hash signer), A5-S1 (SSRF resolver).
+  mechanical parts. These are A1-S2 (landing signature moment), A2-S1 (keys and SD-JWT), A2-S5
+  (Verified CV seal), A3-S3 (account abstraction spike), A3-S4 (Ledger contract), A4-S5 (issue flow).
 - **Stop and ask the human** when:
   - a contract change is needed;
   - another agent's work blocks the step;
@@ -156,14 +157,16 @@ Send to `implementer`: *"Run the simplify skill on these changed files (not test
 
 ## DESIGN.md steps (A1 only)
 
-At the end of **A1-S1** (provisional, from the kit) and **A1-S3** (final, from kit + landing), once
-the reviewer's disposition is `ship`:
+`DESIGN.md` already exists from the pre-pivot kit (tokens, `LineField`, primitives). A1-S1 adds the
+new primitives to it; at the end of **A1-S2** (final, from kit + landing), once the reviewer's
+disposition is `ship`:
 
 1. Run the documenter yourself. Read
    `.claude/skills/impeccable/reference/degraded/documenter.md` and
-   `.claude/skills/impeccable/reference/document.md`. Then write `DESIGN.md` +
+   `.claude/skills/impeccable/reference/document.md`. Then update `DESIGN.md` +
    `.impeccable/design.json` from the built code (globals.css, `src/components/ui`, `/dev/kit`, and
-   the landing at S3), using the direction contract in the landing surface brief.
+   the landing at S2), using the direction contract in the landing surface brief. Drop the
+   "Provisional" line and every diploma reference.
 2. Spawn `reviewer` in **DESIGN.md audit mode**. Fix its MUST-FIX items, then commit them with the step.
 
 ## Progress file template (`docs/plan/progress/A<N>.md`)

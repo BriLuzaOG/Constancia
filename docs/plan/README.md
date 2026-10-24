@@ -1,49 +1,83 @@
-# ScholarKey — 20-hour build plan
+# Constancia — build plan
 
-Five people, five AI build agents, one product. This folder is the whole plan:
+Five people, five AI build agents, one product. **This replaces the earlier ScholarKey plan
+entirely.** This folder is the whole plan:
 
 | File | What it is |
 | --- | --- |
-| [README.md](README.md) | Rules, timeline, ownership, human setup. **Every agent reads this first.** |
+| [README.md](README.md) | Rules, timeline, ownership, human setup, risks. **Every agent reads this first.** |
 | [contracts.md](contracts.md) | Every shared type, route, schema and format. The glue between agents. |
-| [agent-1-design.md](agent-1-design.md) | A1 · Design system, landing, demo university site, polish, submission |
-| [agent-2-credential.md](agent-2-credential.md) | A2 · VC/JWT/ES256K, PDF + byte seal, verification pipeline, forgery attacks |
-| [agent-3-web3.md](agent-3-web3.md) | A3 · Privy (login, raw-hash signing), contract, JIT gas sponsor, chain reads |
-| [agent-4-issuer.md](agent-4-issuer.md) | A4 · DB, onboarding + did.json gate, subscription mock, issuance flow |
-| [agent-5-verifier.md](agent-5-verifier.md) | A5 · did:web resolver (SSRF-safe), lookup API, verify portal, privacy receipt, Forgery Lab |
+| [agent-1-design.md](agent-1-design.md) | A1 · Pivot foundation, design kit, landing, `/ledger`, polish, submission |
+| [agent-2-credential.md](agent-2-credential.md) | A2 · Keys, SD-JWT VC, presentation, verification pipeline, Verified CV, attacks, `/verify` |
+| [agent-3-ledger.md](agent-3-ledger.md) | A3 · Consortium network, contracts, account abstraction, bundler, ledger reads and client |
+| [agent-4-employer.md](agent-4-employer.md) | A4 · DB, blind mailbox, key sign-in, employer console, requests, issuing, revoking |
+| [agent-5-holder.md](agent-5-holder.md) | A5 · Vault, requests, share builder, Verified CV portal, Fake Letter Lab |
 | [demo.md](demo.md) | The 3-minute demo script, pre-flight checklist, fallbacks, Q&A |
 | [SESSION.md](SESSION.md) | How every build session runs: Sonnet plans, Haiku implements, Opus reviews |
 
-Product truth: [PRODUCT.md](../../PRODUCT.md). Visual truth: `DESIGN.md`. A1 writes a provisional
-version from the built kit at the end of A1-S1 (~T+2:30) and the final one at the end of A1-S3
-(~T+5:15). Before T+2:30, use the direction contract in the landing surface brief
-(`sh .claude/skills/impeccable/scripts/impeccable surface-brief read src/app/page.tsx`).
+Product truth: [PRODUCT.md](../../PRODUCT.md). Visual truth: `DESIGN.md` (the Chromatic Interference
+world, built and kept; A1-S0 renames it and A1-S1/S2 extend it).
 
-**How to run a step:** [SESSION.md](SESSION.md). Sonnet orchestrates and plans, Haiku implements,
-Opus reviews. New session per step, kickoff line:
+**How to run a step:** [SESSION.md](SESSION.md). New session per step, kickoff line:
 `Run docs/plan/SESSION.md as the orchestrator for agent A<N>.`
 
 ---
 
-## What we are building (MVP)
+## What we are building
 
-ScholarKey lets a university issue a Certificate of Graduation as a normal PDF that carries a signed
-W3C Verifiable Credential. Anyone can verify it in seconds in their own browser, and no server ever
-stores the graduate's data.
+Employment letters ("constancias de trabajo") are faked in minutes. Constancia turns them into
+credentials that prove themselves and show only what the holder chooses.
 
-- **Issuer** (`/issuer`): email login (Privy) → register institution + domain → publish the
-  generated `did.json` → issuing unlocks → fill the form → the browser builds the PDF, seals it, signs
-  ES256K with the Privy key (no popup), anchors a random ID on Base Sepolia with just-in-time gas
-  sponsoring → download.
-- **Verifier** (`/verify`): drop the PDF → five checks run in order, in the browser (token → issuer
-  key from the university's domain → signature → document seal → public anchor) → verdict + data from
-  the signed token + a privacy receipt of what left the browser.
-- **Forgery Lab** (`/verify/lab`): one click each to edit the visible diploma, edit the hidden token,
-  or forge the university's signature. Each fails at a named check.
-- **Landing** (`/`): the story, the trust model, a working drop slot that hands the file to `/verify`.
+- **Employer** (`/employer`): HR creates an organization account on a device key (no wallet, no gas),
+  applies to the consortium, and once a quorum of members approves, issues certificates when an
+  employee requests one. Each certificate is anchored on a consortium ledger and can be revoked.
+- **Holder** (`/vault`, `/cv`): the employee asks an employer for a certificate, receives it encrypted
+  to a key made for that request, and shares **one fact at a time** (employed ✓, income band,
+  title…) by link or QR. `/cv` attaches many certificates and joins them into a **Verified CV**, one
+  sealed file with the whole history.
+- **Verifier** (`/verify`): open the link, five checks run in the browser, and only the claims the
+  holder chose appear, with the exact count of what stays hidden. `/verify/lab` lets anyone try four
+  forgeries and watch each fail at a named check.
+- **Consortium** (`/ledger`): the public page of the network: four validators, blocks rotating
+  between proposers, members, accredited employers, anchored hashes. `/ledger/operator` lets demo
+  members approve an employer.
 
-**Out of scope (decided):** status registry (revoke/reactivate/delete), management dashboard, key
-rotation, strict PDF/A-3, real Stripe (mock toggle instead), the objective-9 evaluation suite.
+**Out of scope (decided):** identity proofing of employees, HRIS/payroll integrations, a native app,
+holder multi-device recovery, true zero-knowledge predicates (BBS+/ZK), validator governance UI,
+Merkle batching of anchors, paymasters, ERC-1271, federation between consortia, a printable PDF
+(stretch X1), challenge mode (stretch X2), pricing or subscriptions.
+
+### What changed from the ScholarKey plan
+
+| Before | Now |
+| --- | --- |
+| Graduation diploma PDF with a byte-range seal | Employment certificate as an SD-JWT VC. No PDF (printable letter = stretch) |
+| JWT ES256K, Privy raw-hash signing | SD-JWT with selective disclosure, ES256 device keys (WebCrypto) |
+| `did:web`, trust root is the institution's domain | `did:constancia` resolved from the ledger. Trust root = accreditation by a quorum of consortium members |
+| Base Sepolia anchor, just-in-time gas sponsor | Besu QBFT consortium ledger, 4 validators, zero gas, ERC-4337 accounts, no paymaster |
+| Email login through Privy | Sign in by signing a challenge with the device key |
+| Subscription mock gates issuing | Accreditation gates issuing |
+| Issuer builds the PDF and hands it over | Holder requests, employer issues, delivery is end-to-end encrypted |
+| Forgery Lab, 3 attacks | Fake Letter Lab, 4 attacks, plus a live revoke for the 5th check |
+| Demo university site on its own domain | Gone. Demo employers are accredited on the ledger |
+| Design system, line-field world, primitives, `/dev/kit` | **Kept** |
+
+### Decisions made while rewriting (override any of them in chat)
+
+1. **Name: Constancia** (from "constancia de trabajo"). Change it with one search-and-replace.
+2. **Request flow is holder-initiated** and the holder creates a **fresh key pair per request**, so
+   each certificate is a new credential with its own hash and key.
+3. **The join is a "Verified CV"**: a file of normal presentations where every certificate key signs
+   the hash of the whole set (contracts §4.4). No portal-held key, no server, nothing to trust.
+4. **Consortium = Besu QBFT**, four validators in docker compose on one VPS, zero gas.
+5. **Account abstraction = our own small P-256 account contract + factory + a trivial bundler route**
+   inside Next, on the canonical EntryPoint v0.7. A time-boxed spike decides, with a named fallback.
+6. **W3C VC Data Model 2.0 payload secured with SD-JWT**, ES256, W3C DID document from a custom
+   `did:constancia` method.
+7. **Selective disclosure, not zero-knowledge.** We say so ourselves (contracts §12).
+8. **UI stays English**; the pitch is Spanish.
+9. **Time:** assumes about 14 h remain (hackathon start + 20 h ≈ Sunday 07:00 local). T+0 ≈ 16:30.
+   If the real deadline differs, move the freeze to `deadline − 3 h` and cut from the list below.
 
 ---
 
@@ -55,17 +89,25 @@ rotation, strict PDF/A-3, real Stripe (mock toggle instead), the objective-9 eva
    offers them.
 2. **Start of step:** `git pull --rebase`. Read `AGENTS.md` (Next 16 is not the Next you know: read
    the relevant guide in `node_modules/next/dist/docs/` before writing Next code), `PRODUCT.md`, this
-   file, `contracts.md`, and your agent file. UI steps also read `DESIGN.md` (or the surface brief +
-   `/dev/kit` before it exists) and `.claude/skills/impeccable/reference/craft-floor.md`.
+   file, `contracts.md`, and your agent file. UI steps also read `DESIGN.md` and
+   `.claude/skills/impeccable/reference/craft-floor.md`.
 3. **Stay in your lane.** Edit only paths you own (table below). If you need something from another
    agent that isn't ready, code against the stub in `contracts.md` and mock it locally in your own
    files. Never edit their module. Need a contract change? Edit `contracts.md` and the stub in one
    commit and post in chat.
 4. **`ponytail` mode is on for all code.** Smallest complete change, no speculative abstractions.
    Leave `shortcut: <limit>, <when to upgrade>` comments on known limits.
-5. **Security floor, never cut:** validate every request with zod; never log request bodies; never
-   send graduate data to the server; never put PII in URLs, the DB or the chain; SSRF guard on DID
-   resolution; secrets only in env.
+5. **Security floor, never cut:**
+   - zod at every request boundary; never log a request body;
+   - the server only ever sees **ciphertext, public keys, hashes and an opaque employee number**.
+     No claim, name, national ID or plaintext certificate in the DB, a URL, a log or the ledger;
+   - share and delivery keys live in a URL **fragment** or the holder's vault, never in a query or
+     a server;
+   - browser keys are **non-extractable** WebCrypto keys; only the seed script and tests ever hold
+     an extractable private key;
+   - the ledger gateway answers an allowlist of read calls only; the bundler caps op size and rate;
+   - the memory ledger refuses `NODE_ENV=production`;
+   - secrets only in env.
 6. **Gate before every push (all must pass):**
    `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
    UI steps also: run `pnpm dev`, look at the page at 1440 px and 390 px, then run
@@ -73,11 +115,16 @@ rotation, strict PDF/A-3, real Stripe (mock toggle instead), the objective-9 eva
 7. **Before committing code** (not docs/tests): run the `simplify` skill on what you changed.
 8. **Commit and push:** conventional commit, scope = your area (`feat(credential): …`,
    `fix(verify): …`), `git pull --rebase`, `git push`. Main must stay green: CD deploys every push to
-   Render. Never force-push. Never commit `.env*`.
+   Render. Never force-push. Never commit `.env*` or `demo-pack/`.
 9. **End of step:** post in chat `A<n>-S<m> done` plus anything others must know (new exports,
    contract changes, env vars).
 10. **New dependency?** Add it in a separate tiny commit (`chore(deps): add x`) and push it
-    immediately so lockfile conflicts stay small. Prefer what A1-S0 already installed.
+    immediately so lockfile conflicts stay small.
+11. **No Web3 words for humans.** In employer and holder flows never write "wallet", "gas", "seed
+    phrase", "transaction" or "UserOp". Say "signing key on this device", "written to the ledger".
+    The consortium and the ledger are product concepts and may be named. Technical-details
+    disclosures can name anything.
+12. **Never mention data-protection laws or regulations** anywhere: UI, docs, README, pitch.
 
 ### Steps and sessions
 
@@ -85,6 +132,7 @@ Each step block in the agent files is the **spec** the orchestrator plans from. 
 files to read, skills, what to build, how to verify, and the commit message. Run every step through
 [SESSION.md](SESSION.md), one fresh session per step. Progress lives in `docs/plan/progress/A<N>.md`.
 If a step runs long, stop at a green, pushable point, push, and continue in a new session.
+Steps are tagged **[M]** must, **[S]** should, **[X]** stretch.
 
 ---
 
@@ -92,64 +140,90 @@ If a step runs long, stop at a green, pushable point, push, and continue in a ne
 
 | Area | Owner |
 | --- | --- |
-| `package.json`, lockfile, `next.config.ts`, `tsconfig.json`, CI, `render.yaml`, `src/lib/env.ts`, `src/app/layout.tsx`, `globals.css`, `src/components/ui/`, `/` landing, `/dev/kit`, `university-site/`, submission files | **A1** |
-| `src/lib/credential/`, `public/contexts/` | **A2** |
-| `contracts/`, `scripts/contracts/`, `scripts/check-demo.ts`, `src/lib/chain/`, `src/lib/privy/`, `/api/gas/sponsor`, `/dev/privy`, `/api/dev/**` | **A3** |
-| `prisma/`, `src/lib/db.ts`, `src/lib/issuer/`, `/issuer/**`, `/api/issuer/**`, `/api/issuance/**`, `public/demo/` | **A4** |
-| `src/lib/did/`, `/verify/**`, `/api/verify/lookup` | **A5** |
+| `package.json`, lockfile, `next.config.ts`, `tsconfig.json`, CI, `render.yaml`, `src/lib/env.ts`, `src/lib/handoff.ts`, `src/app/layout.tsx`, `globals.css`, `src/components/ui/`, `/` landing, `/dev/kit`, `/ledger/**`, submission files | **A1** |
+| `src/lib/credential/`, `public/contexts/`, `/verify` (page, `_components`, `_lib`) | **A2** |
+| `docker/ledger/`, `contracts/`, `scripts/chain/`, `scripts/check-demo.ts`, `src/lib/ledger/`, `/api/bundler`, `/api/ledger/**`, `/api/did/**`, `/api/dev/**`, `/dev/identity`, `public/demo/` | **A3** |
+| `prisma/`, `src/lib/server/`, `src/lib/employer/`, `/employer/**`, `/api/auth/**`, `/api/requests/**`, `/api/employer/**`, `/api/shares/**` | **A4** |
+| `src/lib/vault/`, `/vault/**`, `/cv/**`, `/verify/lab/**` | **A5** |
 
 Shared files edited after S0 (`package.json` for a new dep, `env.ts` for a new var): add lines only,
 in a tiny commit, push right away.
 
 ---
 
-## Timeline (T+ hours from kickoff)
+## Timeline (T+ hours from kickoff, T+0 ≈ 16:30)
 
 ```
-T+0:00 ─ H0 human setup (all)      A1-S0 foundation (everyone else: read plan, docs, skills)
-T+0:45 ─ M0  foundation on main → fan out
-          A1 design kit · A2 VC/JWT · A3 Privy · A4 DB · A5 did:web
-T+2:30 ─ provisional DESIGN.md + /dev/kit (A1-S1) → UI work starts from it
-T+4:00 ─ M1  Privy login + raw-hash signature works · contract deployed · JWT+seal round-trips
-          · resolver passes SSRF tests · design kit live
-T+5:15 ─ final DESIGN.md (A1-S3)
-T+9:30 ─ M2  first real diploma issued end-to-end locally and verified on /verify
-T+12:00 ─ M3  same on the Render deploy, demo university did.json live · run `code-review`
-T+15:00 ─ M4  Forgery Lab, privacy receipt, landing complete
-T+17:30 ─ M5  polish/audit done → FEATURE FREEZE at T+18:00
-T+18:00–19:00  three full demo rehearsals (demo.md), record backup video
-T+19:00–20:00  submission (metadata, description, logo, README), final deploy check
+T+0:00 ─ H0 human setup (all)   A1-S0 pivot foundation   A3-S1 starts (docker/ only, no repo deps)
+T+1:00 ─ M0  pivot on main → fan out
+T+3:00 ─ M1  SD-JWT issue + present round-trips · memory ledger + gateway routes · DB + mailbox routes
+          · vault keys + request flow · consortium network up locally and on the VPS
+T+4:45 ─ A3 GO / NO-GO: a P-256 device key's UserOp lands on the network at zero fee
+          (else the AA-lite fallback, announced to the whole team)
+T+7:15 ─ M2  the whole product runs on the memory ledger: request → issue → deliver → share →
+          verify (five checks) → verified CV model. Local only
+T+8:30 ─ M3  real ledger swapped in (LEDGER_MODE=chain): same flow on the Render deploy
+T+10:00 ─ M4  Verified CV · Fake Letter Lab · revoke · /ledger and /ledger/operator complete
+T+11:30 ─ M5  polish and audit done → FEATURE FREEZE
+T+11:30–13:30  three full demo rehearsals (demo.md), record the backup video
+T+13:30–14:30  submission (metadata, description, logo, README), final deploy check
 ```
 
 | Agent | Step start times (T+) |
 | --- | --- |
-| A1 | S0 0:00 · S1 0:45 · S2 2:30 · S3 3:15 · S4 5:15 · S5 7:15 · S6 10:30 · S7 12:30 · S8 14:30 · S9 15:30 |
-| A2 | S1 0:45 · S2 2:00 · S3 3:30 · S4 5:15 · S5 6:45 · S6 8:00 · S7 12:00 |
-| A3 | S1 0:45 · S2 2:15 · S3 3:30 · S4 4:45 · S5 6:00 · S6 7:30 · S7 9:30 |
-| A4 | S1 0:45 · S2 2:15 · S3 3:45 · S4 5:30 · S5 6:30 · S6 7:45 · S7 9:30 · S8 11:00 |
-| A5 | S1 0:45 · S2 2:00 · S3 3:00 · S4 5:00 · S5 6:30 · S6 8:30 · S7 11:00 |
+| A1 | S0 0:00 · S1 1:00 · S2 2:00 · S3 4:00 · S4 6:00 · S5 7:15 · S6 7:45 · S7 9:15 · S8 10:45 · S9 11:30 |
+| A2 | S1 1:00 · S2 2:15 · S3 3:30 · S4 4:45 · S5 6:30 · S6 7:45 · S7 8:30 · S8 10:00 |
+| A3 | S1 0:00 · S2 1:30 · S3 2:30 · S4 4:45 · S5 5:45 · S6 6:45 · S7 8:15 · S8 9:45 |
+| A4 | S1 1:00 · S2 2:15 · S3 3:15 · S4 4:30 · S5 5:30 · S6 7:15 · S7 8:30 · S8 9:30 |
+| A5 | S1 1:00 · S2 2:45 · S3 4:30 · S4 6:30 · S5 8:00 · S6 9:00 · S7 10:15 |
 
-Gaps between a step's end and the next start are buffer: use them to unblock others, then for the
-"If you're ahead" list. After your last step, join demo rehearsals and bug-fixing on your area.
+Gaps between a step's end and the next start are buffer: use them to unblock others. After your last
+step, join rehearsals and bug-fixing on your area.
 
-Critical path: **A3-S1/S2 (Privy) → A4-S3 (onboarding) → A4-S6 (issuance) → M2.** If Privy raw-hash
-signing fails at A3-S2, stop and tell the whole team immediately (fallback in agent-3).
+**Critical path:** A3-S3 (account abstraction spike) → A3-S4/S5/S6 (ledger and client) → M3. Until M3
+everyone builds and tests against the **memory ledger** (A3-S2), which has the same interface and
+semantics, so nobody waits on the chain. If the spike fails at the go/no-go, tell the whole team at
+once and switch to the AA-lite fallback (contracts §7).
+
+### If we run behind, cut in this order
+
+1. X2 challenge mode, X1 printable letter, the validator-kill demo beat.
+2. Team keys UI (`/employer/team`) and the issued-list polish.
+3. `/ledger/operator` UI (approve with `scripts/chain/seed.ts` instead).
+4. Landing below the fold (keep the first viewport).
+5. Lab attacks 3 and 4.
+
+Never cut: request → issue → deliver, share with hidden claims, the five checks, revoke, the real
+ledger (M3), the `/ledger` page.
 
 ---
 
-## H0 · Human setup (do in parallel with A1-S0, ~45 min)
+## H0 · Human setup (do in parallel with A1-S0, ~60 min)
 
 | # | Task | Who |
 | --- | --- | --- |
-| H1 | **Privy:** create app → enable Email login only → Embedded wallets: Ethereum, create on login → turn **off** "confirmation modals" → allowed origins: `http://localhost:3000` + Render URL → copy App ID + App Secret | A3's human |
-| H2 | **Postgres:** create a free Neon (or Render Postgres) DB → `DATABASE_URL` (pooled) | A4's human |
-| H3 | **RPC:** Alchemy app on Base Sepolia → `BASE_SEPOLIA_RPC_URL` (fallback `https://sepolia.base.org`) | A3's human |
-| H4 | **Sponsor wallet:** after A3 generates the key (first minutes of A3-S1), fund it with ≥0.05 Base Sepolia ETH from the Coinbase CDP / Alchemy faucets | A3's human |
-| H5 | **Render:** mirror the repo to a personal GitHub (see root README) → Blueprint → web service + the `university-site` static site (A1-S2 adds it to `render.yaml`) → set env vars → add GitHub secrets for CD | A1's human |
-| H6 | Share all env values in a private channel. Each dev creates `.env.local` from `.env.example` | everyone |
+| H1 | **Consortium host:** a Linux VPS, ≥ 4 vCPU and 8 GB RAM, Docker and Docker Compose, ports 80/443 open, a hostname (or a Cloudflare Tunnel). Give A3 SSH access. **Fallback:** run the same compose on one team laptop behind a Cloudflare Tunnel | A3's human |
+| H2 | **Postgres:** a free Neon (or Render Postgres) database → `DATABASE_URL` (pooled) | A4's human |
+| H3 | **Foundry** (`curl -L https://foundry.paradigm.xyz \| bash`, then `foundryup`) and Docker on every machine that touches contracts or the network | A3's human |
+| H4 | **Render:** mirror the repo to a personal GitHub (see root README) → Blueprint → the web service → set env vars → GitHub secrets for CD. The static `waraira-university` service is gone: remove it from the blueprint | A1's human |
+| H5 | **Secrets:** A3 generates `RELAYER_PRIVATE_KEY` (a throwaway key with no funds), A4 generates `SESSION_SECRET`. Share everything in a private channel; each dev creates `.env.local` from `.env.example` | everyone |
+| H6 | **Demo browsers:** three Chrome profiles named Registrar, Holder and Recruiter (the recruiter one in incognito), zoom 125 % | the presenter's team |
 
-The demo university is fictional: **Universidad Waraira (demo institution)**, served from its own
-domain (`waraira-university.onrender.com` or whatever Render assigns). Label it as a demo everywhere.
+The demo employers, members and employees are fictional ("Empresa Demo A", "Banco Demo", …). Label
+them as demos everywhere and never use a real company's name.
+
+---
+
+## Risks and fallbacks
+
+| Risk | We know by | Fallback |
+| --- | --- | --- |
+| The 4-node network will not stabilise, or the VPS is too small | A3-S1, T+1:30 | tune `-Xmx`, move to an 8 GB host, else run it on a laptop behind a tunnel |
+| Account abstraction rejects zero gas, or P-256 verify blows the gas limit | A3-S3, T+4:45 | give the EntryPoint a funded deposit and a 1-wei price; else AA-lite (relayer submits `execute(op, signature)`); announce it |
+| The SD-JWT library does not fit our nested `credentialSubject` or the CV seal | A2-S1, T+1:20 | hand-roll the ~200 lines (contracts §4.2 lists the exact mechanics) |
+| Non-extractable device keys are lost with browser data | demo prep | `demo-pack` re-import through `/dev/identity` and `/vault/import`; keep copies in the team drive |
+| Render ↔ VPS latency or an outage on demo day | pre-flight | phone hotspot, the laptop-hosted network, then the backup video |
+| Everything behind the schedule | M2 at T+7:15 | use the cut list above, in order |
 
 ---
 
@@ -157,17 +231,18 @@ domain (`waraira-university.onrender.com` or whatever Render assigns). Label it 
 
 | Criterion | Weight | Where we earn it |
 | --- | --- | --- |
-| Technical | 25% | VC 2.0 JWT (ES256K) via Privy raw-hash signing · SSRF-guarded did:web · byte-range PDF seal · issuer-keyed anchor contract · JIT gas with OP-stack L1 fee · fully client-side verification |
-| Impact | 20% | Degree recognition for the diaspora, credential fraud, GDPR/FERPA by construction, free verification for anyone |
-| Originality | 15% | The visual world (see DESIGN.md) · Forgery Lab · privacy receipt that *proves* the server is blind |
-| Ambition | 20% | Full issuer → holder → verifier ecosystem: chain, WaaS, sponsorship, DIDs, in 20 h |
-| Execution | 20% | Deployed, polished, live demo with no wallet popups, works on a judge's laptop (sample diploma + lab) |
+| Technical | 25% | SD-JWT VC with selective disclosure and key binding · a Verified CV sealed by every certificate key · QBFT consortium ledger with zero gas · ERC-4337 accounts on P-256 device keys with no paymaster · fully client-side verification |
+| Impact | 20% | Employment letters are forged constantly and trusted anyway; the diaspora, banks, landlords and consulates all depend on them; the holder reveals less, not more |
+| Originality | 15% | The Verified CV join · "prove one fact, reveal nothing else" · five forgeries, five named checks · a consortium of employers and institutions instead of one company or a public chain |
+| Ambition | 20% | Employer → holder → verifier ecosystem with its own consortium network, account abstraction, accreditation governance, revocation and CV joining, in 14 h |
+| Execution | 20% | Deployed, polished, a live 3-minute demo with no wallet popups, a lab any judge can run on their own laptop |
 
 ---
 
 ## If you're ahead (stretch, only after M4)
 
-- Contract source verified on BaseScan via Sourcify (A3).
-- Visible-text cross-check: extract the PDF text with pdf.js and diff it against the signed claims (A2/A5).
-- QR on the PDF opens `/verify` on a phone. Make sure mobile verify works (A5).
-- A second demo institution with an impostor domain to show "domain is the root of trust" (A4/A5).
+- **X1** Printable letter: PDF with the chosen claims and a QR to the share link (A2, re-add `pdf-lib`).
+- **X2** Challenge mode: the verifier shows a nonce QR, the holder answers, no replay (A2/A5).
+- Kill one validator on stage and show the chain keep producing blocks (A3, A1 on `/ledger`).
+- Read from several member nodes and require agreement (A3).
+- Multi-owner recovery for holders (A3/A5).

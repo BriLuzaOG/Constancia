@@ -1,195 +1,259 @@
-# Agent 2 · Credential core: VC, ES256K, PDF seal, verification, attacks
+# Agent 2 · Credential core and the verifier: keys, SD-JWT VC, presentation, checks, Verified CV, `/verify`
 
-**Mission:** the cryptographic heart, as pure, tested TypeScript that runs in the browser and in
-Node. You build the W3C VC JWT, ES256K signing and verification, the certificate PDF with its
-byte-range seal, the five-check verification pipeline, and the attacks the Forgery Lab runs.
+**Mission:** the cryptographic heart and the demo's centrepiece. Pure, tested TypeScript that runs in
+the browser and Node: device keys, the SD-JWT employment certificate, selective presentation with key
+binding, the five-check verification pipeline, the Verified CV join and the Lab's attacks. Then the
+`/verify` portal that renders it.
 
-**You own:** `src/lib/credential/`, `public/contexts/`, `public/fonts/` (certificate fonts).
+**You own:** `src/lib/credential/`, `public/contexts/`, `src/app/verify/page.tsx`,
+`src/app/verify/_components/`, `src/app/verify/_lib/`.
 
-Your code has no UI and no server. Everything takes its dependencies as arguments: the signer
-(`DigestSigner`) and the lookup (`LookupFn`). That keeps it testable and lets A3, A4 and A5 plug
-in. Tests are your proof: every step ships vitest tests.
+Your library has no server and no UI. Everything takes its dependencies as arguments: the signer
+(`Es256Signer`) and the lookup (`LookupFn`). That keeps it testable and lets A3, A4 and A5 plug in.
+Tests are your proof: every library step ships vitest tests. Node 24 has WebCrypto, so tests run
+without a browser.
 
 Every step: follow the rules in [README.md](README.md).
 
 ---
 
-## A2-S1 · VC 2.0 + ES256K JWT · T+0:45 · ~75 min
+## A2-S1 · Keys, ES256 and SD-JWT VC issuance [M] · T+1:00 · ~75 min · HARD STEP: you implement the core
 
 ```
-You are Agent 2 on ScholarKey. Build the credential and its ES256K signature.
+You are Agent 2 on Constancia. Build the keys and the certificate.
 
-Read: PRODUCT.md, docs/plan/contracts.md §3, §4.1, §4.2, §4.4.
-Read the READMEs of @noble/curves v2 (secp256k1 sign/verify, prehash option, signature formats)
-and jose v6 (base64url, decodeProtectedHeader, decodeJwt) in node_modules.
+Read: PRODUCT.md, docs/plan/contracts.md §3, §4.1, §4.2, §4.5, §5.
+Read, in node_modules, the README of jose v6 (base64url, calculateJwkThumbprint) and spend at most
+20 minutes on @sd-jwt/core (does it give you: browser + Node, signer/hasher callbacks, a W3C-shaped
+payload with disclosures nested under credentialSubject, sorted _sd). If it does, use it for
+issuing. If it fights you, hand-roll sdjwt.ts: contracts §4.2 lists the exact mechanics (about 200
+lines with jose, @noble/hashes and WebCrypto). Whatever you pick, A2-S2 to S5 also need decoding and
+digest checks, so keep them in your own code.
 Skills: typescript, zod-4, ponytail.
 
 Build in src/lib/credential/:
-1. types.ts: fill in the stub exactly as in contracts, plus graduateRecordSchema (zod 4): trimmed
-   strings; fullName 2–120; nationalId 3–32; program 2–120; degreeLevel enum; graduationDate ISO
-   date, not in the future; honors optional, ≤ 60.
-2. vc.ts: buildCredential({ record, issuer, credentialId, sealDigest, issuedAt, appUrl }) returns
-   a GraduationCredential (contracts §4.1; @context[1] = `${appUrl}/contexts/scholarkey-v1.jsonld`).
-3. jwt.ts: encodeSigningInput(header, payload), assembleJwt(signingInput, sig64),
-   decodeCredentialJwt(jwt) → { header, payload, signingInput, signature } with light zod checks.
-4. es256k.ts: localSigner(privateKey): DigestSigner (tests + the Forgery Lab attacker);
-   normalizeSignature(sig: Uint8Array | Hex) → 64-byte low-s r||s (accept 65-byte r||s||v);
-   verifyJwtSignature(jwt, jwk); jwkFromPublicKey(uncompressed); addressFromJwk(jwk) (viem's
-   publicKeyToAddress or keccak of x||y).
+1. types.ts: fill in the stub exactly as in contracts §4.1, plus employmentRecordSchema (zod 4)
+   with the rules in §4.1.
+2. keys.ts: Es256Signer over WebCrypto ECDSA P-256 (sign returns the raw 64-byte r||s that WebCrypto
+   gives), generateSigner, signerFromPrivateJwk, keyIdOf(jwk) = viem keccak256 of x||y as 32-byte
+   big-endian each, verifyEs256 (crypto.subtle.verify).
+3. keystore.ts (browser only): IndexedDB store of CryptoKey objects, so non-extractable keys persist:
+   createStoredSigner, loadSigner, importStoredSigner (private JWK imported as non-extractable),
+   listSignerNames. shortcut: no automated test (needs a browser), covered by manual checks and by
+   A3's /dev/identity page; keep the logic tiny.
+4. sdjwt.ts: issueCredential and credentialHashOf per contracts §4.5. Derive employedNow and
+   salaryBand. Header and payload exactly as §4.2. validUntil = +90 days only for a current
+   employment. Throw a readable error for any record that fails the schema.
+5. public/contexts/constancia-v1.jsonld: a small JSON-LD context defining EmploymentCredential,
+   Employee and the twelve claim terms.
 
-Tests (src/lib/credential/*.test.ts): sign/verify round-trip with a random key; any payload or
-header byte change fails; wrong key fails; high-s signature is normalized and verifies;
-addressFromJwk(jwk) === privateKeyToAddress(key); a realistic credential JWT stays under 4 KB.
+Tests (src/lib/credential/*.test.ts): sign and verify round trip; one flipped byte fails; a wrong
+key fails; keyIdOf matches a hand-computed vector; the issuer JWT payload contains none of the
+record's strings (assert the surname, national ID and job title are absent) and has exactly 12
+digests; every digest matches its disclosure; all twelve claims come back from a full SD-JWT; the
+issuer JWT stays under 3 KB and the full SD-JWT under 6 KB; a current employment has validUntil, a
+past one does not.
 
-Gate. Commit: "feat(credential): VC 2.0 builder and ES256K JWT sign/verify".
+Gate. Commit: "feat(credential): ES256 keys and SD-JWT VC issuance". Post the exports.
 ```
 
-## A2-S2 · Byte-range seal + createSealedCredentialPdf · T+2:00 · ~90 min
+## A2-S2 · Presentation, key binding and share crypto [M] · T+2:15 · ~75 min
 
 ```
-You are Agent 2 on ScholarKey. Embed the JWT in the PDF so that any edit to the document is
-detectable. This is the same idea as the ByteRange of a PDF digital signature.
+You are Agent 2 on Constancia. The holder shows only what they choose, and every presentation is
+bound to the holder's key.
 
-Read: docs/plan/contracts.md §4.3 and §4.4 (the spec is exact; follow it to the byte).
+Read: contracts §4.3, §4.5. jose v6 docs for CompactEncrypt, compactDecrypt and the ECDH-ES and
+dir algorithms with WebCrypto keys.
 Skills: typescript, ponytail.
 
 Build in src/lib/credential/:
-1. seal.ts:
-   - addSealPlaceholder(doc: PDFDocument): an UNCOMPRESSED embedded-file stream via
-     doc.context.stream(bytes, dict) (NOT doc.attach(): it compresses), 8192 bytes of 0x20, dict
-     /Type /EmbeddedFile /Subtype /application#2Fjwt /ScholarKeySeal true; a Filespec named
-     scholarkey-credential.jwt in Names/EmbeddedFiles and the catalog /AF.
-   - findSealRegion(bytes) → { start, length: 8192 } | null (marker → next `stream` → skip EOL).
-   - computeSealDigest(bytes) (sha256 from @noble/hashes → base64url; sync, works everywhere).
-   - writeJwtIntoSeal(bytes, jwt) (ASCII, ≤ 8192, throws otherwise), extractSealedJwt(bytes),
-     verifySeal(bytes, expectedDigest) (copy, blank the region, hash, compare).
-2. layout.ts + a minimal renderCertificate(record, meta) (plain text lines for now; the real
-   design is S4) and CERT_LAYOUT with the coordinates you used.
-3. issue.ts: createSealedCredentialPdf(args) = render → placeholder → save({useObjectStreams:false})
-   → digest → onProgress('sealed', "<KB> · seal sha-256") → buildCredential → sign via args.sign →
-   assemble JWT → write into seal → onProgress('signed', "ES256K · <kid>") → return.
+1. present.ts: REVEAL_TEMPLATES (§4.3), presentCredential (keeps only the chosen disclosures,
+   appends a KB-JWT with { iat, exp, aud, nonce, sd_hash, cv_set? } signed by args.holder; sd_hash
+   over "<issuerJwt>~<chosen disclosures>~"), decodePresentation (splits, base64url-decodes,
+   recomputes every digest, returns the disclosed claims, the hidden count = digests in _sd minus
+   matched disclosures, and the KB-JWT if present; throws TokenError with a human sentence).
+2. share-crypto.ts: generateEncKey (non-extractable ECDH P-256, returns the public JWK),
+   encryptForHolder and decryptFromIssuer (JWE ECDH-ES + A256GCM), sealShare and openShare (JWE dir
+   + A256GCM with a random 256-bit key returned as base64url).
 
-Tests: extract === the JWT; verifySeal true; flip one byte outside the region → false; change the
-JWT payload inside the region → verifySeal still true but verifyJwtSignature false; a PDF without a
-seal → extract returns null; oversize JWT throws. With WRITE_SAMPLE=1 a test writes
-/tmp/scholarkey-sample.pdf: open it and check the attachment shows up in a PDF viewer.
+Tests: each template reveals exactly its claims; a hidden claim's name and value appear nowhere in
+the presentation string; the KB-JWT verifies with cnf.jwk; sd_hash is correct; a mutated disclosure
+fails decodePresentation; a disclosure added by an attacker fails; encrypt/decrypt round trip; the
+wrong key fails; openShare with a wrong key fails.
 
-Gate. Commit: "feat(credential): byte-range PDF seal with embedded VC JWT".
+Gate. Commit: "feat(credential): selective presentation, key binding and blind share crypto".
+Post "presentCredential and share crypto are real" (A4 and A5 need them).
 ```
 
-## A2-S3 · Verification pipeline · T+3:30 · ~75 min
+## A2-S3 · Verification pipeline [M] · T+3:30 · ~75 min
 
 ```
-You are Agent 2 on ScholarKey. Build the client-side verification as an async generator the
-verifier UI renders step by step.
+You are Agent 2 on Constancia. Build client-side verification as an async generator the UI renders
+row by row.
 
-Read: docs/plan/contracts.md §4.5 and §8 (/api/verify/lookup shapes and error codes).
+Read: contracts §4.5, §4.6, §6 (LookupRequest, LookupResponse).
 Skills: typescript, ponytail.
 
-Build src/lib/credential/verify.ts: verifyCredential(pdf, lookup): AsyncGenerator<CheckEvent, Verdict>.
-Emit CHECKING, then the outcome, for each check in order; time each one (elapsedMs, measured):
-1 TOKEN: extractSealedJwt + decode. FAILED: "No ScholarKey credential found in this file" /
-  "The embedded credential is damaged". measured: "1,842 bytes".
-2 ISSUER: lookup({ did: payload.issuer.id, kid: header.kid, credentialId }) (kid must belong to the
-  did). Map errors: ISSUER_UNREACHABLE → UNAVAILABLE ("The university's website didn't answer. Try
-  again later."); DID_NOT_FOUND / DID_INVALID / KEY_NOT_FOUND → FAILED. measured: resolved domain.
-3 SIGNATURE: verifyJwtSignature with the key from the DID document. measured: "ES256K · 2.4 ms".
-4 SEAL: verifySeal(pdf, payload.documentSeal.digest). measured: "212 KB hashed".
-  FAILED detail: "The document was changed after the university issued it."
-5 ANCHOR: response.anchor.anchored AND response.issuerAddress === addressFromJwk(jwk), recomputed
-  locally. CHAIN_UNREACHABLE → UNAVAILABLE. measured: anchored date + "Base Sepolia".
-After the first FAILED/UNAVAILABLE, emit NOT_EXAMINED for the rest and return the Verdict.
-No artificial delays here (pacing is UI's job). Never send anything to lookup except
-{ did, kid, credentialId }.
+Build src/lib/credential/verify.ts: verifyPresentation(input, ctx) and verifyCertificate(sdJwt, ctx).
+Emit CHECKING, then the outcome, for each of the five checks in the fixed order TOKEN, ISSUER,
+SIGNATURE, HOLDER, LEDGER (contracts §4.6 lists the exact rule of each). Time each one (elapsedMs)
+and fill `measured`:
+  TOKEN "1,842 bytes · 7 hidden" · ISSUER the employer name · SIGNATURE "ES256 · 1.1 ms" ·
+  HOLDER "key 0x9c… · bound" · LEDGER "block 1,204".
+Failure sentences are specific and blame no one ("The employer is not accredited by the
+consortium", "A disclosed value was changed after the employer signed it").
+"Now" is the lookup's head.time. A lookup that throws LedgerUnreachable, or answers 503, is
+UNAVAILABLE at ISSUER (and at LEDGER if it was the second call). After the first FAILED or
+UNAVAILABLE, emit NOT_EXAMINED for the rest and return the Verdict.
+No artificial delays here (pacing is the UI's job). Never send anything to lookup except
+{ issuer, keyId, credentialHash }.
 
-Tests with a fake lookup: authentic; edited visual → SEAL; edited token → SIGNATURE; key not in
-the DID document (KEY_NOT_FOUND) → ISSUER; not anchored → ANCHOR; issuer unreachable → UNAVAILABLE at
-ISSUER with 3 NOT_EXAMINED; random bytes → TOKEN; assert lookup received exactly 3 keys.
+Tests with a fake lookup: authentic; changed disclosure → TOKEN; re-signed with another key →
+SIGNATURE; issuer status NONE, PENDING and SUSPENDED → ISSUER; key missing → ISSUER; wrong KB key →
+HOLDER; wrong nonce → HOLDER; not anchored → LEDGER; revoked → LEDGER; past validUntil → LEDGER;
+key removed before anchoredAt → LEDGER; gateway unreachable → UNAVAILABLE at ISSUER with 3
+NOT_EXAMINED; random text → TOKEN; assert the lookup received exactly 3 keys.
 
 Gate. Commit: "feat(credential): sequential client-side verification pipeline".
 ```
 
-## A2-S4 · Certificate design · T+5:15 · ~90 min · needs DESIGN.md (A1-S3)
+## A2-S4 · `/verify` portal [M] · T+4:45 · ~105 min
 
 ```
-You are Agent 2 on ScholarKey. Make the certificate beautiful. It is what the graduate keeps and
-what judges see first.
+You are Agent 2 on Constancia. Build the verification portal. This is the demo's centrepiece.
 
-Read: DESIGN.md (tokens, certificate guidance), the landing surface brief, contracts §4.4 (CERT_LAYOUT).
-Skills: impeccable (read reference/craft-floor.md; the certificate is a Read surface in the
-ScholarKey world), typescript.
+Read: DESIGN.md, the landing surface brief ("Memorable moment"), contracts §4.6, §6, §11
+(DropZone, CheckList, CheckRow, Verdict, LineField, ClaimList, Receipt, Disclosure, Mono).
+Skills: impeccable (Operate surface in the Constancia world; craft-floor before edits), nextjs-16,
+react-19, tailwind-4, typescript.
+Needs: A1-S1 (ClaimList), A3-S2 (POST /api/ledger/lookup on the memory ledger), A4-S1 (GET
+/api/shares/:id). Until they exist use a fake lookup and a local fixture in
+src/app/verify/_lib/fixture.ts, and delete them when the real ones land.
 
-Build src/lib/credential/pdf.ts renderCertificate(record, meta, assets):
-- A4 landscape on white paper, ink text. University name (display face), "Certificate of
-  Graduation", the graduate's name very large, degree level + program, honors when present,
-  graduation date, issue date.
-- Right edge: the ScholarKey verification stub, a vertical band of the four line inks drawn as
-  vector rects (≥ 1.2 pt pitch so it prints cleanly), with a white window holding a vector QR
-  (qrcode's QRCode.create(...).modules drawn as rects) to `${verifyUrl}`, the short credential ID,
-  the issuer domain, and "Digitally sealed. Any edit breaks the seal."
-- Fonts embedded via @pdf-lib/fontkit from public/fonts/ (download the OFL TTFs named in DESIGN.md).
-  Take font bytes as an `assets` argument: the browser fetches /fonts/*, tests read from disk.
-  Export loadCertificateAssets() for the browser.
-- Update CERT_LAYOUT with the real boxes (the visual attack paints over `honors`).
-Visual check: WRITE_SAMPLE=1 test → /tmp/scholarkey-sample.pdf → magick -density 110 to PNG (or
-open in a browser) and look. Two rounds max. Synthetic sample data only.
+Build src/app/verify/page.tsx + _components + _lib:
+1. Input, three ways: a share link (#s=<id>.<key> in the fragment: fetch the ciphertext, openShare,
+   parse), a dropped or picked file (.sdjwt, .json) or the file handed over from the landing
+   (takeHandoffFile), and pasted text. Detect a presentation versus a Verified CV by its JSON type.
+   Reject anything over 256 KB before parsing.
+2. src/app/verify/_lib/lookup-client.ts: a LookupFn that POSTs to /api/ledger/lookup and records the
+   exact request (URL, method, JSON body, byte length) for the receipt.
+3. Run verifyPresentation and render the five CheckRows (Certificate · Employer accredited · Employer's
+   signature · Bound to its holder · Ledger record) with real measured values. Pace each row for
+   legibility (≥ 450 ms on screen; the measured ms stay real). The LineField band scans while
+   running and resolves at the end.
+4. Verdict: AUTHENTIC / NOT AUTHENTIC (name the failed check; expected vs found in one sentence) /
+   CANNOT VERIFY RIGHT NOW (the ledger gateway did not answer, "try again").
+5. AUTHENTIC panel, data from the verified disclosures ONLY: the employer name (from the ledger,
+   with its short account) prominently, a ClaimList of the shown claims, then "N more claims stay
+   hidden by the holder" (read-only hidden rows). Label: "Read from the signed certificate".
+   Holder: "Bound to a key, not a name" when no name was disclosed. validUntil when present.
+6. "Check again" button: re-runs the whole pipeline against the same input (the revoke moment in the
+   demo depends on it).
+7. Receipt "What left your browser": the lookup body as sent (issuer, keyId, credentialHash), its
+   byte length, the share fetch (an ID, no key). Beside it "What stayed on this device": the
+   disclosed values and the decryption key. The numbers come from the recorded request.
+8. Disclosure "Technical details": the JWS header, the issuer DID and kid, the key JWK thumbprint,
+   the credential hash, the anchored block and time, the disclosure digests, the standards used
+   (VC Data Model 2.0, SD-JWT, ES256, did:constancia).
+9. "Try to forge it →" link to /verify/lab. aria-live announcements for each check.
+Dynamic-import the credential library.
 
-Gate. Commit: "feat(credential): certificate design with line-ink verification stub and QR".
+Verify with A2's own test certificates (fake lookup) now, real ones after M2. 1440, 1280x720, 390.
+Detector. Gate.
+Commit: "feat(verify): verifier portal with sequential checks, disclosed claims and receipt".
 ```
 
-## A2-S5 · Forgery Lab attacks · T+6:45 · ~75 min
+## A2-S5 · Verified CV: build, verify, timeline [M] · T+6:30 · ~75 min · HARD STEP: you implement the core
 
 ```
-You are Agent 2 on ScholarKey. Write the three attacks the Forgery Lab runs live in the browser.
-Each must fail at a different, named check.
+You are Agent 2 on Constancia. Join many certificates into one file that cannot be spliced, trimmed
+after sealing, or mixed with a stranger's.
 
-Read: contracts §4.4 (Attack, runAttack), §4.5.
+Read: contracts §4.4, §4.5, §4.6 (CvEvent, CvVerdict). A5 builds /cv on this and A1 polishes it.
 Skills: typescript, ponytail.
 
-Build src/lib/credential/attacks.ts runAttack(id, pdf):
-1 'edit-visual': load with pdf-lib, paint a paper-coloured rect over CERT_LAYOUT.honors and draw a
-  better honor ("Summa Cum Laude"); save({useObjectStreams:false}). Assert the sealed JWT still
-  extracts. Expected: fails at SEAL.
-2 'edit-token': decode, change credentialSubject.degree.honors (or the name), re-encode the payload,
-  keep header and signature, write back into the seal region. Expected: SEAL passes, fails at SIGNATURE.
-3 'forge-signature': same edit, re-signed with a fresh random key while keeping the university's
-  kid. Expected: fails at SIGNATURE ("signed with a key the university never published").
-Each returns attack.changed as a human sentence, e.g. 'Honors changed from "—" to "Summa Cum Laude"
-on the printed page'.
+Build src/lib/credential/passport.ts:
+1. buildVerifiedCv({ items, aud, ttlSec, now }): two passes. Pass 1: for every item compute the
+   presentation string without its KB-JWT and its sd_hash. Pass 2: cv_set = base64url(sha256(
+   sorted sd_hashes joined with '~')); each item's holder key signs its KB-JWT carrying the shared
+   aud, a shared random nonce, exp and cv_set. Return the JSON of contracts §4.4.
+2. verifyVerifiedCv(input, ctx): for each entry run the five checks (events carry `entry`); HOLDER
+   also recomputes cv_set from all entries and requires it to match. NOT_AUTHENTIC names the entry.
+   AUTHENTIC returns every entry's Verdict and the timeline.
+3. buildTimeline(entries): sort by startDate; absent endDate with employedNow = present; flag gaps
+   longer than 1 month and overlaps; an entry with hidden dates sits last as "dates hidden". Pure,
+   no network: A5 also uses it on certificates the holder fully owns.
+4. Extend /verify (you own it) to render a CV: a header ("3 certificates · 3 employers · sealed
+   together"), the Timeline, and each entry's CheckRows and ClaimList in a collapsible. Reuse the
+   components from A2-S4.
 
-Tests: run each through verifyCredential with a fake lookup; assert the failing check.
-Gate. Commit: "feat(credential): forgery lab attacks".
+Tests: three certificates verify; removing one presentation after sealing makes every remaining
+entry fail HOLDER; adding another person's presentation fails; reordering still verifies; a CV with
+one expired entry fails at that entry's LEDGER; gap and overlap detection; a single presentation
+verifies without cv_set.
+
+Gate. Commit: "feat(credential): Verified CV join sealed by every certificate key".
+Post "buildVerifiedCv and buildTimeline are real" (A5 needs them).
 ```
 
-## A2-S6 · Real signer integration + hardening · T+8:00 · ~2 h · pair with A3/A4
+## A2-S6 · Fake Letter Lab attacks [M] · T+7:45 · ~45 min
 
 ```
-You are Agent 2 on ScholarKey. Make the library survive real browsers, the real Privy signer and
-real-world PDFs.
+You are Agent 2 on Constancia. Write the four attacks the Lab runs live in the browser. Each must
+fail at a different, named check.
 
-Read: contracts §4, §7 (usePrivySigner), the issuer flow in agent-4 S6.
+Read: contracts §4.5 (runAttack, Attack, Sample), §4.6.
+Skills: typescript, ponytail.
+
+Build src/lib/credential/attacks.ts runAttack(id, sample). The sample is public/demo/sample.json
+(A3 writes it): a real, anchored synthetic certificate plus its holder private JWK, published on
+purpose so the Lab runs on any laptop.
+1 'edit-claim': present the sample with the jobTitle disclosure rewritten to a better title.
+  Expected: TOKEN.
+2 'forge-signature': swap the issuer JWT's signature for one made with a fresh random key and keep
+  the employer's kid. Expected: SIGNATURE.
+3 'fake-employer': generate a brand-new key and an account address that was never accredited, issue
+  a perfectly valid certificate to the sample holder from it, present it. Expected: ISSUER.
+4 'stolen-certificate': present the sample but sign the KB-JWT with a fresh attacker key.
+  Expected: HOLDER.
+Each returns attack.changed as a human sentence ('jobTitle changed from "Logistics Analyst" to
+"Director of Operations"') and expectedFailure.
+
+Tests: run each through verifyPresentation with a fake lookup whose sample issuer is ACTIVE and any
+other account is NONE; assert the failing check; assert the untouched sample still passes.
+Gate. Commit: "feat(credential): fake letter lab attacks".
+```
+
+## A2-S7 · Real ledger, hardening, numbers [M] · T+8:30 · ~90 min
+
+```
+You are Agent 2 on Constancia. Make the library survive real browsers, the real ledger and bad input.
+
+Read: contracts §4, §6.
 Skills: typescript, ponytail.
 
 Do:
-1. public/contexts/scholarkey-v1.jsonld: a small JSON-LD context defining GraduationCredential,
-   Graduate, nationalId, degree, honors, graduationDate, documentSeal.
-2. Pair with A4 on the first real issuance (/issuer/issue): check that the Privy signature
-   normalizes (65 bytes, high-s), fonts load in the browser, and pdf-lib is dynamically imported only
-   on /issuer/issue, /verify and /verify/lab.
-3. Edge cases with clear messages: non-PDF, empty, > 15 MB (reject before parsing), encrypted PDF,
-   a PDF re-saved by Preview/Acrobat (seal broken, or token stripped → TOKEN failed with "This file
-   was re-saved by another program and lost its credential").
-4. Measure: total local verification time on the sample (excluding network). Post the numbers for
-   the demo narration.
-Add a regression test for every bug found. Gate. Commit: "fix(credential): real-signer and edge-case hardening".
+1. After A3-S6 lands, run /verify against the real ledger (LEDGER_MODE=chain). Fix anything that
+   differs from the memory ledger (timestamps, key windows, head.time).
+2. Edge cases with clear messages: not text, empty, > 256 KB (before parsing), wrong typ or cty,
+   an unknown @context, a duplicated or unreferenced disclosure, a future iat, a clock skewed by
+   more than 5 minutes, an expired validUntil, a CV with 0 or more than 12 entries.
+3. Measure: total local verification time excluding the network, for one presentation and a
+   3-entry CV. Post the numbers for the demo narration.
+4. Run the code-review skill on your diff since M0 and address real findings.
+Add a regression test for every bug found. Gate. Commit: "fix(credential): real-ledger and edge-case hardening".
 ```
 
-## A2-S7 · Production e2e support · T+12:00 · ~90 min
+## A2-S8 · Stretch [X] · T+10:00 · ~90 min · only if everything is green
 
 ```
-You are Agent 2 on ScholarKey. Walk the full demo on the Render deploy (issue → verify → three lab
-attacks) with A4/A5 and fix anything in src/lib/credential/. Then run the code-review skill on your
-diff since the M0 commit and address real findings. Stretch, only if all green: visible-text
-cross-check (pdf.js text vs signed claims) as an extra detail on SEAL failures.
-Commit: "fix(credential): …".
+Pick one, in this order, and stop at a green push:
+X1 Printable letter: a PDF (re-add pdf-lib in a tiny dep commit) rendering the holder's chosen claims
+   in the Constancia world with a QR to the share link. The visible text is a convenience; the link
+   is the proof. Lives in the holder's browser only. Hook it into the share builder through a small
+   exported function and tell A5.
+X2 Challenge mode: /verify shows a nonce QR, the vault answers it, the presentation is bound to that
+   nonce (verifyPresentation's expectNonce already exists). Needs a tiny blind relay route from A4.
+Commit: "feat(credential): <what>".
 ```
