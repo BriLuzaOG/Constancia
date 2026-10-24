@@ -49,6 +49,9 @@ export interface VerifyContext {
 const CHAIN_ID = '24024';
 const CHECK_CODES: CheckCode[] = ['TOKEN', 'ISSUER', 'SIGNATURE', 'HOLDER', 'LEDGER'];
 const DID_PATTERN = /^did:constancia:(\d+):(0x[0-9a-f]{40})$/;
+const DEFAULT_SKEW_SEC = 300;
+const MAX_INPUT_BYTES = 256 * 1024;
+const CONTEXT_SUFFIX = '/contexts/constancia-v1.jsonld';
 const KEY_ID_PATTERN = /^0x[0-9a-f]{64}$/;
 
 class CheckFailure extends Error {
@@ -88,6 +91,9 @@ function checkToken(decoded: DecodedPresentation): Entry {
   }
   if (!Array.isArray(context) || context[0] !== 'https://www.w3.org/ns/credentials/v2') {
     throw new CheckFailure('The certificate does not use the expected credential context');
+  }
+  if (typeof context[1] !== 'string' || !context[1].endsWith(CONTEXT_SUFFIX)) {
+    throw new CheckFailure('The certificate uses an unknown vocabulary');
   }
   if (!Array.isArray(type) || !type.includes('EmploymentCredential')) {
     throw new CheckFailure('This is not an employment certificate');
@@ -177,7 +183,11 @@ async function checkHolder(
   if (ctx.expectNonce !== undefined && payload.nonce !== ctx.expectNonce) {
     throw new CheckFailure('The presentation answers a different challenge');
   }
-  if (typeof payload.exp !== 'number' || payload.exp <= entry.lookup!.head.time) {
+  const ledgerNow = entry.lookup!.head.time;
+  if (typeof payload.iat === 'number' && payload.iat > ledgerNow + (ctx.maxSkewSec ?? DEFAULT_SKEW_SEC)) {
+    throw new CheckFailure('This share is dated in the future. Check the clock of the device that made it');
+  }
+  if (typeof payload.exp !== 'number' || payload.exp <= ledgerNow) {
     throw new CheckFailure('This share has expired. Ask the holder for a new one');
   }
   if (expectCvSet !== undefined && payload.cv_set !== expectCvSet) {
@@ -186,8 +196,12 @@ async function checkHolder(
   return { measured: `key ${entry.keyId.slice(0, 4)}… · bound` };
 }
 
-function checkLedger(entry: Entry): Outcome {
+function checkLedger(entry: Entry, maxSkewSec: number): Outcome {
   const { key, record, head } = entry.lookup!;
+  const issuedAt = entry.decoded.payload.iat;
+  if (typeof issuedAt === 'number' && issuedAt > head.time + maxSkewSec) {
+    throw new CheckFailure('This certificate is dated in the future');
+  }
   if (!record) throw new CheckFailure('The ledger has no record of this certificate');
   if (record.keyId !== entry.keyId) {
     throw new CheckFailure('The ledger record was anchored with a different key');
@@ -216,6 +230,13 @@ export async function* verifyEntry(
 
   const steps: (() => Promise<Outcome> | Outcome)[] = [
     () => {
+      if (typeof input !== 'string' || input.trim().length === 0) {
+        throw new CheckFailure('Nothing to check: this is not text');
+      }
+      const bytes = utf8(input).length;
+      if (bytes > MAX_INPUT_BYTES) {
+        throw new CheckFailure('This is too large to be a certificate (limit 256 KB)');
+      }
       let decoded: DecodedPresentation;
       try {
         decoded = decodePresentation(input);
@@ -224,13 +245,12 @@ export async function* verifyEntry(
         throw new CheckFailure('This is not a Constancia certificate');
       }
       entry = checkToken(decoded);
-      const bytes = utf8(input).length;
       return { measured: `${formatInt(bytes)} bytes · ${decoded.hiddenCount} hidden` };
     },
     () => checkIssuer(entry, ctx),
     () => checkSignature(entry),
     () => checkHolder(entry, ctx, opts.expectCvSet),
-    () => checkLedger(entry),
+    () => checkLedger(entry, ctx.maxSkewSec ?? DEFAULT_SKEW_SEC),
   ];
 
   let failure: { code: CheckCode; error: CheckFailure } | null = null;
