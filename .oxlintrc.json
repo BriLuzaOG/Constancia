@@ -1,0 +1,159 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "options": {
+    "typeAware": true
+  },
+  "plugins": ["typescript", "unicorn", "oxc", "promise", "node", "vitest", "import"],
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "perf": "warn",
+    "style": "off"
+  },
+  "rules": {
+    // Un ciclo de imports entre módulos es un bug de arquitectura, no un estilo.
+    "import/no-cycle": "error",
+    // reflect-metadata y los CSS son side-effect imports legítimos.
+    "import/no-unassigned-import": ["error", { "allow": ["reflect-metadata", "**/*.css"] }],
+    "typescript/no-explicit-any": "error",
+    // Reglas type-aware opinionadas: no atrapan bugs reales en este código
+    // (boundaries con `any`, mónadas y casts controlados con type guards)
+    // exigirlas llenaba el código de guards artificiales y disables
+    // no-unsafe-type-assertion: casts ya validados por tipo o por guard
+    // no-unnecessary-type-parameters: genéricos que son contrato público (buses CQRS)
+    // no-unsafe-enum-comparison: compara enum contra string normalizado del input
+    "typescript/no-unsafe-type-assertion": "off",
+    "typescript/no-unnecessary-type-parameters": "off",
+    "typescript/no-unsafe-enum-comparison": "off",
+    // Desactivada: oxlint --fix convierte imports runtime a `import type`, que TS borra del output
+    // NestJS DI resuelve parámetros de constructor via reflect metadata en runtime
+    // Si el import se borra, ModuleRef/QueryBus/CommandBus quedan undefined y la app explota
+    // TypeScript ya valida type-only usage en build time
+    "typescript/consistent-type-imports": "off",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/await-thenable": "error",
+    // Familia no-unsafe-*: el código cruza boundaries con `any` controlados
+    // (yaml.parse, adapter de Express, APIs de librerías) y narrowing defensivo
+    // exigir tipado perfecto ahí es ruido, no un bug real
+    "typescript/no-unsafe-argument": "off",
+    "typescript/no-unsafe-assignment": "off",
+    "typescript/no-unsafe-call": "warn",
+    "typescript/no-unsafe-member-access": "warn",
+    "typescript/no-unsafe-return": "off",
+    // Aserciones sobre `object` (records) que TypeScript no estrecha solo
+    "typescript/no-unnecessary-type-assertion": "off",
+    "typescript/no-non-null-asserted-optional-chain": "error",
+    "typescript/no-duplicate-enum-values": "error",
+    "typescript/no-array-delete": "warn",
+    // `String(unknown)` en el filtro de excepciones sobre errores que no son Error
+    "typescript/no-base-to-string": "off",
+    "typescript/no-for-in-array": "error",
+    "typescript/no-implied-eval": "error",
+    "typescript/no-meaningless-void-operator": "warn",
+    "typescript/no-misused-new": "error",
+    "typescript/no-misused-spread": "warn",
+    "typescript/no-redundant-type-constituents": "warn",
+    "typescript/no-this-alias": "warn",
+    "typescript/no-unnecessary-parameter-property-assignment": "warn",
+    "typescript/no-unsafe-declaration-merging": "error",
+    "typescript/no-unsafe-unary-minus": "warn",
+    "typescript/no-useless-default-assignment": "warn",
+    "typescript/prefer-for-of": "warn",
+    "typescript/prefer-includes": "warn",
+    "typescript/prefer-nullish-coalescing": "warn",
+    "typescript/prefer-optional-chain": "warn",
+    "typescript/prefer-string-starts-ends-with": "warn",
+    // Fuerza `async` en funciones que devuelven Promise aunque solo retornen
+    // otra promesa: añade ruido sin cambiar runtime ni seguridad
+    "typescript/promise-function-async": "off",
+    // Exige que todo valor interpolado en un template sea string; los logs ya
+    // construyen el mensaje con tipos controlados o con String() explícito
+    "typescript/restrict-template-expressions": "off",
+    // Exige comparaciones explícitas en cualquier condicional (incluso `if (str)`)
+    // demasiado verboso y redundante con el manejo nullish (`??`, `?.`) ya aplicado
+    "typescript/strict-boolean-expressions": "off",
+    "typescript/switch-exhaustiveness-check": "error",
+    "typescript/prefer-return-this-type": "warn",
+    "typescript/no-confusing-void-expression": "warn",
+    // Condiciones defensivas que los tipos estrictos ya dan por muertas
+    "typescript/no-unnecessary-condition": "off",
+    "typescript/no-unnecessary-type-conversion": "warn",
+    "typescript/no-extraneous-class": "off",
+    "unicorn/consistent-function-scoping": "off",
+
+    "promise/always-return": "error",
+    "promise/no-return-wrap": "error",
+    "promise/param-names": "error",
+    "promise/no-nesting": "warn",
+    "promise/no-promise-in-callback": "warn",
+    "promise/no-new-statics": "error",
+    "promise/avoid-new": "warn",
+    "promise/prefer-await-to-then": "warn",
+    // Desactivada: regla de estilo, no de seguridad. Los helpers ROP de Either
+    // (tryCatch/tryCatchAsync) reciben callbacks por diseño y choca con el patrón
+    // Apagarla no cambia runtime ni seguridad; las reglas que sí atrapan errores
+    // de promesas reales siguen activas (no-floating-promises y no-misused-promises)
+    "promise/prefer-await-to-callbacks": "off",
+
+    "node/no-exports-assign": "error",
+    "node/no-new-require": "error",
+    "node/no-path-concat": "error",
+
+    "unicorn/no-array-for-each": "warn",
+    "unicorn/no-array-reduce": "warn",
+    "unicorn/no-lonely-if": "warn",
+    "unicorn/no-nested-ternary": "off",
+    "unicorn/no-new-array": "warn",
+    "unicorn/no-new-buffer": "warn",
+    "unicorn/no-object-as-default-parameter": "warn",
+    "unicorn/no-thenable": "warn",
+    "unicorn/no-this-assignment": "warn",
+    "unicorn/prefer-dom-node-append": "warn",
+    "unicorn/prefer-dom-node-dataset": "warn",
+    "unicorn/prefer-dom-node-remove": "warn",
+    "unicorn/prefer-includes": "warn",
+    "unicorn/prefer-modern-dom-apis": "warn",
+    "unicorn/prefer-modern-math-apis": "warn",
+    "unicorn/prefer-native-coercion-functions": "warn",
+    "unicorn/prefer-negative-index": "warn",
+    "unicorn/prefer-node-protocol": "warn",
+    "unicorn/prefer-number-properties": "warn",
+    "unicorn/prefer-optional-catch-binding": "warn",
+    "unicorn/prefer-query-selector": "warn",
+    "unicorn/prefer-set-has": "warn",
+    "unicorn/prefer-spread": "warn",
+    "unicorn/prefer-string-replace-all": "warn",
+    "unicorn/prefer-string-slice": "warn",
+    "unicorn/prefer-string-trim-start-end": "warn",
+    "unicorn/no-anonymous-default-export": "warn",
+    "unicorn/prefer-type-error": "warn",
+    "unicorn/throw-new-error": "warn",
+
+    "no-console": "warn",
+    "no-debugger": "error",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-wrappers": "error",
+    "no-throw-literal": "error",
+    "no-unused-expressions": "warn",
+    "no-useless-call": "warn",
+    "no-useless-concat": "warn",
+    "eqeqeq": "error",
+    "curly": ["warn", "multi-line"],
+    "no-var": "error",
+    "prefer-const": "warn",
+    "prefer-template": "warn",
+    "object-shorthand": "warn",
+    "no-shadow": "warn",
+
+    "vitest/expect-expect": "warn",
+    "vitest/no-identical-title": "error",
+    "vitest/no-test-return-statement": "warn",
+    "vitest/prefer-called-with": "warn",
+    "vitest/prefer-to-be": "warn",
+    "vitest/prefer-to-have-length": "warn",
+    "vitest/valid-expect": "error"
+  },
+  "ignorePatterns": ["node_modules", "dist", "coverage", "web/dist", "web/node_modules", "*.d.ts", "*.js", "*.mjs", "*.cjs"]
+}
