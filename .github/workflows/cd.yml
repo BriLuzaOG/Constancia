@@ -1,0 +1,110 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24.22.1'
+  PNPM_VERSION: '12.15.0'
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+  deploy:
+    name: Deploy to Render
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+      RENDER_SERVICE_URL: ${{ vars.RENDER_SERVICE_URL }}
+    steps:
+      - name: Trigger deploy of this commit
+        id: trigger
+        run: |
+          set -euo pipefail
+          if [ -z "${RENDER_DEPLOY_HOOK_URL:-}" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK_URL is not configured in this repository, skipping deploy. Set it in the repo Render is linked to."
+            exit 0
+          fi
+          body="$(curl -fsS -X POST -G --data-urlencode "ref=${GITHUB_SHA}" "$RENDER_DEPLOY_HOOK_URL")"
+          deploy_id="$(jq -r '.deploy.id // empty' <<<"$body")"
+          echo "deploy_id=$deploy_id" >> "$GITHUB_OUTPUT"
+          if [ -z "$deploy_id" ]; then
+            echo "::warning::Render accepted the deploy without an id (another deploy is in progress); it will run after the current one."
+          else
+            echo "Deploy $deploy_id queued for commit $GITHUB_SHA"
+          fi
+
+      - name: Wait until live
+        if: steps.trigger.outputs.deploy_id != ''
+        env:
+          DEPLOY_ID: ${{ steps.trigger.outputs.deploy_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RENDER_API_KEY:-}" ] || [ -z "${RENDER_SERVICE_ID:-}" ]; then
+            echo "::warning::RENDER_API_KEY or RENDER_SERVICE_ID not set, skipping deploy verification"
+            exit 0
+          fi
+
+          deploy_id="$DEPLOY_ID"
+          deadline=$((SECONDS + 1200))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            status="$(curl -fsS \
+              -H "Authorization: Bearer ${RENDER_API_KEY}" \
+              -H "Accept: application/json" \
+              "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys/${deploy_id}" \
+              | jq -r '.status')"
+            echo "Deploy ${deploy_id}: ${status}"
+            case "$status" in
+              live)
+                echo "Deploy ${deploy_id} is live: ${RENDER_SERVICE_URL:-https://dashboard.render.com}"
+                exit 0
+                ;;
+              build_failed | update_failed | pre_deploy_failed | canceled | deactivated)
+                echo "::error::Deploy ${deploy_id} ended in ${status}"
+                exit 1
+                ;;
+            esac
+            sleep 15
+          done
+          echo "::error::Deploy ${deploy_id} did not go live within 20 minutes"
+          exit 1
