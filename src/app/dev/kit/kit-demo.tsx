@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckList, CheckRow } from '@/components/ui/check-list';
 import type { RowStatus } from '@/components/ui/check-list';
+import { ClaimList } from '@/components/ui/claim-list';
+import type { ClaimView } from '@/components/ui/claim-list';
 import { DropZone } from '@/components/ui/drop-zone';
 import { LineField } from '@/components/ui/line-field';
 import type { LineFieldState } from '@/components/ui/line-field';
@@ -227,7 +229,7 @@ const VERDICT_COPY: Record<VerdictKind, { title: string; reason: string }> = {
   },
   NOT_AUTHENTIC: {
     title: 'NOT AUTHENTIC',
-    reason: 'Failed at: Document seal. The visible diploma was edited after signing.',
+    reason: 'Failed at: Document seal. The visible certificate was edited after signing.',
   },
   UNAVAILABLE: {
     title: 'CANNOT VERIFY RIGHT NOW',
@@ -267,6 +269,50 @@ export function VerdictDemo() {
   );
 }
 
+// one row per state; the two toggles are live, the rest are fixed
+export function ClaimListDemo() {
+  const [shared, setShared] = useState({ tenure: true, salary: false });
+
+  const claims: ClaimView[] = [
+    {
+      name: 'employer',
+      label: 'Employer',
+      value: 'Empresa Demo A',
+      state: 'shown',
+    },
+    {
+      name: 'role',
+      label: 'Role',
+      value: 'Analyst (synthetic)',
+      state: 'hidden',
+    },
+    {
+      name: 'tenure',
+      label: 'Tenure',
+      value: '2 years',
+      state: shared.tenure ? 'on' : 'off',
+    },
+    {
+      name: 'salary',
+      label: 'Salary band',
+      value: 'Band C',
+      state: shared.salary ? 'on' : 'off',
+    },
+  ];
+
+  return (
+    <div className="max-w-xl">
+      <ClaimList
+        caption="Choose what this share shows. Hidden claims stay in your vault."
+        claims={claims}
+        onToggle={(name, next) => {
+          setShared((current) => ({ ...current, [name]: next }));
+        }}
+      />
+    </div>
+  );
+}
+
 export function DropZoneDemo() {
   const [file, setFile] = useState<File | null>(null);
 
@@ -275,7 +321,7 @@ export function DropZoneDemo() {
       <div className="flex flex-col gap-4">
         <LineField interactive className="border-2 border-ink p-6 sm:p-12">
           <DropZone
-            label="Drop a diploma PDF"
+            label="Drop a certificate"
             hint="The file never leaves your browser."
             onFile={setFile}
           />
@@ -288,7 +334,7 @@ export function DropZoneDemo() {
         ) : null}
       </div>
       <DropZone
-        label="Drop a diploma PDF"
+        label="Drop a certificate"
         hint="The file never leaves your browser."
         disabled
         onFile={() => undefined}

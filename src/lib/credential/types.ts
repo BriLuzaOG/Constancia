@@ -1,99 +1,73 @@
 import { z } from 'zod';
-import type { AnchorInfo } from '@/lib/chain/anchor';
-import type { LookupRequest, LookupResponse } from '@/lib/did/types';
 
 export type Hex = `0x${string}`;
-
-/** Lives only in the registrar's browser. Never sent to any server. */
-export interface GraduateRecord {
-  fullName: string;
-  nationalId: string;
-  program: string;
-  degreeLevel: 'Technician' | 'Bachelor' | 'Master' | 'Doctorate';
-  graduationDate: string;
-  honors?: string;
-}
-
-export interface IssuerInfo {
-  did: string;
-  name: string;
-  kid: string;
-}
-
-export interface SecpJwk {
+export type Address = Hex;
+export interface P256Jwk {
   kty: 'EC';
-  crv: 'secp256k1';
+  crv: 'P-256';
   x: string;
   y: string;
 }
-
-/** Signs a 32-byte SHA-256 digest. Returns 64-byte compact r||s (low-s). */
-export type DigestSigner = (digest: Uint8Array) => Promise<Uint8Array>;
-
-export interface GraduationCredential {
-  '@context': ['https://www.w3.org/ns/credentials/v2', string];
-  id: string;
-  type: ['VerifiableCredential', 'GraduationCredential'];
-  issuer: { id: string; name: string };
-  validFrom: string;
-  credentialSubject: {
-    type: 'Graduate';
-    name: string;
-    nationalId: string;
-    degree: { type: GraduateRecord['degreeLevel']; name: string; honors?: string };
-    graduationDate: string;
-  };
-  documentSeal: { alg: 'sha-256'; digest: string; region: 8192 };
+export type EcdhJwk = P256Jwk;
+export interface P256PrivateJwk extends P256Jwk {
+  d: string;
 }
 
-export interface SealedCredential {
-  pdf: Uint8Array;
-  jwt: string;
-  credentialId: Hex;
-  sealDigest: string;
+/** Lives only in the employer's browser, then in the holder's vault. Never sent to a server. */
+export interface EmploymentRecord {
+  givenName: string; // "María Fernanda"
+  familyName: string; // "Rojas"
+  nationalId: string; // "V-24.567.890"
+  jobTitle: string; // "Logistics Analyst"
+  department?: string;
+  employmentType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT';
+  startDate: string; // ISO date, not in the future
+  endDate?: string; // ISO date >= startDate. Absent = currently employed
+  workCountry: string; // ISO 3166-1 alpha-2, "VE"
+  salaryMonthlyUsd?: number; // integer, 0..1_000_000
 }
 
-export const graduateRecordSchema = z.object({
-  fullName: z.string().trim().min(2).max(120),
-  nationalId: z.string().trim().min(3).max(32),
-  program: z.string().trim().min(2).max(120),
-  degreeLevel: z.enum(['Technician', 'Bachelor', 'Master', 'Doctorate']),
-  graduationDate: z.iso.date(),
-  honors: z
-    .string()
-    .trim()
-    .max(60)
-    .transform((s) => (s === '' ? undefined : s))
-    .optional(),
-});
+/** The twelve selectively disclosable claims. camelCase because the VC is JSON-LD shaped. */
+export type ClaimName =
+  | 'givenName'
+  | 'familyName'
+  | 'nationalId'
+  | 'jobTitle'
+  | 'department'
+  | 'employmentType'
+  | 'startDate'
+  | 'endDate'
+  | 'employedNow'
+  | 'workCountry'
+  | 'salaryMonthlyUsd'
+  | 'salaryBand';
+export type DisclosedClaims = Partial<Record<ClaimName, string | number | boolean>>;
 
-// verification events (contracts §4.5)
-export type CheckCode = 'TOKEN' | 'ISSUER' | 'SIGNATURE' | 'SEAL' | 'ANCHOR';
-export type CheckStatus =
-  | 'PENDING'
-  | 'CHECKING'
-  | 'VERIFIED'
-  | 'FAILED'
-  | 'UNAVAILABLE'
-  | 'NOT_EXAMINED';
+// UTC date: can be a day ahead of Venezuela (UTC-4) but never behind, so no false "future" rejections.
+const todayIso = (): string => new Date().toISOString().slice(0, 10);
 
-export interface CheckEvent {
-  index: 1 | 2 | 3 | 4 | 5;
-  code: CheckCode;
-  status: CheckStatus;
-  measured?: string;
-  detail?: string;
-  elapsedMs?: number;
-}
-
-export type Verdict =
-  | {
-      kind: 'AUTHENTIC';
-      credential: GraduationCredential;
-      issuerDomain: string;
-      anchor: AnchorInfo;
-    }
-  | { kind: 'NOT_AUTHENTIC'; failedAt: CheckCode; reason: string }
-  | { kind: 'UNAVAILABLE'; failedAt: 'ISSUER' | 'ANCHOR'; reason: string };
-
-export type LookupFn = (req: LookupRequest) => Promise<LookupResponse>;
+export const employmentRecordSchema = z
+  .object({
+    givenName: z.string().min(1).max(80),
+    familyName: z.string().min(1).max(80),
+    nationalId: z.string().min(3).max(32),
+    jobTitle: z.string().min(2).max(100),
+    department: z.string().max(80).optional(),
+    employmentType: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT']),
+    startDate: z.iso.date(),
+    endDate: z.iso.date().optional(),
+    workCountry: z.string().regex(/^[A-Z]{2}$/),
+    salaryMonthlyUsd: z.number().int().min(0).max(1_000_000).optional(),
+  })
+  .refine((r) => r.startDate <= todayIso(), {
+    error: 'startDate is in the future',
+    path: ['startDate'],
+  })
+  .refine((r) => r.endDate === undefined || r.endDate <= todayIso(), {
+    error: 'endDate is in the future',
+    path: ['endDate'],
+  })
+  .refine((r) => r.endDate === undefined || r.endDate >= r.startDate, {
+    error: 'endDate is before startDate',
+    path: ['endDate'],
+  });

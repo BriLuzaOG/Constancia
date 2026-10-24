@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ScholarKey',
+  title: 'Constancia',
   description:
-    "Academic credentials anyone can verify in seconds and nobody can forge, without the university or the platform keeping the student's data.",
+    'Constancia turns a work letter into a credential that proves itself and shows only what the holder chooses.',
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

@@ -6,13 +6,36 @@ import { Field } from '@/components/ui/field';
 import { Mono } from '@/components/ui/mono';
 import { PageHeader } from '@/components/ui/page-header';
 import { Panel } from '@/components/ui/panel';
+import { QrBlock } from '@/components/ui/qr-block';
 import { Receipt } from '@/components/ui/receipt';
-import { CheckListDemo, DropZoneDemo, LineFieldDemo, VerdictDemo } from './kit-demo';
+import { Timeline } from '@/components/ui/timeline';
+import type { TimelineItem } from '@/components/ui/timeline';
+import { CheckListDemo, ClaimListDemo, DropZoneDemo, LineFieldDemo, VerdictDemo } from './kit-demo';
 
-export const metadata: Metadata = { title: 'UI kit · ScholarKey' };
+export const metadata: Metadata = { title: 'UI kit · Constancia' };
 
 // synthetic values only: the kit never shows a real credential
 const CREDENTIAL_ID = '0x3f9a1c7e0b2d4a685c1e8b7a9d3f0e26a4b9c2d1e7f086351d6e3b9a0c7f2e54';
+
+const TIMELINE: TimelineItem[] = [
+  {
+    id: 'a',
+    employer: 'Empresa Demo A',
+    title: 'Analyst (synthetic)',
+    start: '2021-03',
+    end: '2023-08',
+    status: 'VERIFIED',
+  },
+  {
+    id: 'b',
+    employer: 'Empresa Demo B',
+    title: 'Coordinator (synthetic)',
+    start: '2024-01',
+    end: 'present',
+    status: 'PENDING',
+    note: 'Letter not yet checked',
+  },
+];
 
 const TOKENS = [
   { name: 'paper', className: 'bg-paper' },
@@ -44,7 +67,7 @@ export default function KitPage() {
     <main className="mx-auto max-w-6xl px-gutter py-12">
       <PageHeader
         title="Design kit"
-        lead="Every ScholarKey primitive in every state. Chromatic Interference: truth resolves when you look closely."
+        lead="Every Constancia primitive in every state. Chromatic Interference: truth resolves when you look closely."
       />
 
       <Section title="Colour">
@@ -80,8 +103,8 @@ export default function KitPage() {
           <div>
             <p className="text-small text-ink-muted">text-body</p>
             <p className="max-w-[65ch] text-body">
-              ScholarKey reads the signed token in your browser and checks each link against the
-              university&apos;s own domain. Nothing you drop here is uploaded anywhere.
+              Constancia reads the signed credential in your browser and checks each link against
+              the consortium ledger. Nothing you drop here is uploaded anywhere.
             </p>
           </div>
           <div>
@@ -113,12 +136,34 @@ export default function KitPage() {
         <DropZoneDemo />
       </Section>
 
+      <Section title="ClaimList">
+        <ClaimListDemo />
+      </Section>
+
+      <Section title="Timeline">
+        <div className="max-w-2xl">
+          <Timeline items={TIMELINE} gaps={[{ from: '2023-08', to: '2024-01', months: 5 }]} />
+        </div>
+      </Section>
+
+      <Section title="QrBlock">
+        <QrBlock
+          value="https://constancia.example/share#demo-fragment"
+          label="Share link (synthetic)"
+          copy
+        />
+      </Section>
+
       <Section title="Receipt">
         <div className="flex flex-col gap-12">
           <Receipt
             title="What left your browser"
             rows={[
-              { label: 'DID', value: 'did:web:waraira-university.onrender.com', mono: true },
+              {
+                label: 'DID',
+                value: 'did:constancia:24024:0x1f9a…',
+                mono: true,
+              },
               { label: 'Key id', value: '…#key-1', mono: true },
               { label: 'Credential ID', value: CREDENTIAL_ID, mono: true },
               { label: 'Document', value: 'Never sent', muted: true },
@@ -129,8 +174,11 @@ export default function KitPage() {
             title="What we stored"
             rows={[
               { label: 'Credential ID', value: CREDENTIAL_ID, mono: true },
-              { label: 'Institution', value: 'Universidad Waraira (demo institution)' },
-              { label: 'Transaction hash', value: '0x9c41…7e2a (sample)', mono: true },
+              {
+                label: 'Institution',
+                value: 'Universidad Waraira (demo institution)',
+              },
+              { label: 'Anchor', value: '0x9c41…7e2a (sample)', mono: true },
               { label: 'Time', value: '2026-10-24 14:32 UTC' },
             ]}
             footnote="No name, no grades, no document."
@@ -168,7 +216,7 @@ export default function KitPage() {
           <Field label="Graduate name">
             <input type="text" name="graduate" placeholder="María Fernanda Rojas (synthetic)" />
           </Field>
-          <Field label="Graduate name, with hint" hint="As printed on the diploma.">
+          <Field label="Graduate name, with hint" hint="As printed on the certificate.">
             <input
               type="text"
               name="graduate-hint"
@@ -199,8 +247,8 @@ export default function KitPage() {
           </div>
           <Disclosure summary="Technical details">
             <p className="max-w-[65ch]">
-              The verifier hashes the file in memory, reads the signed token and resolves the
-              issuer&apos;s did:web document over HTTPS. Nothing is written to disk.
+              The verifier hashes the file in memory, reads the signed credential and resolves the
+              issuer&apos;s DID document over HTTPS. Nothing is written to disk.
             </p>
           </Disclosure>
           <div className="flex flex-col gap-4">

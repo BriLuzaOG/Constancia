@@ -42,7 +42,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# scholarkey
+# constancia
 /src/generated/
 .impeccable/review/
 .impeccable/build/
+demo-pack/
+docker/ledger/data/
+contracts/out/

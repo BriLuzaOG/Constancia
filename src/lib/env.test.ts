@@ -1,15 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const VALID = {
-  NEXT_PUBLIC_APP_URL: 'https://scholarkey.example',
-  NEXT_PUBLIC_PRIVY_APP_ID: 'privy-app-id',
-  PRIVY_APP_SECRET: 'privy-secret',
+  NEXT_PUBLIC_APP_URL: 'https://constancia.example',
+  NEXT_PUBLIC_LEDGER_MODE: 'chain',
+  NEXT_PUBLIC_LEDGER_CHAIN_ID: '24024',
+  NEXT_PUBLIC_ENTRY_POINT_ADDRESS: `0x${'c'.repeat(40)}`,
+  NEXT_PUBLIC_ACCOUNT_FACTORY_ADDRESS: `0x${'d'.repeat(40)}`,
+  NEXT_PUBLIC_DEMO_MODE: '1',
+  LEDGER_MODE: 'chain',
+  LEDGER_RPC_URL: 'https://ledger.example',
+  LEDGER_CONTRACT_ADDRESS: `0x${'b'.repeat(40)}`,
+  LEDGER_DEPLOY_BLOCK: '12345',
+  RELAYER_PRIVATE_KEY: `0x${'a'.repeat(64)}`,
   DATABASE_URL: 'postgresql://user:pass@host/db',
-  BASE_SEPOLIA_RPC_URL: 'https://sepolia.base.org',
-  NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL: 'https://sepolia.base.org',
-  SPONSOR_PRIVATE_KEY: `0x${'a'.repeat(64)}`,
-  NEXT_PUBLIC_ANCHOR_CONTRACT_ADDRESS: `0x${'b'.repeat(40)}`,
-  ANCHOR_DEPLOY_BLOCK: '12345',
+  SESSION_SECRET: 's'.repeat(32),
 };
 
 type Vars = Partial<Record<keyof typeof VALID, string>>;
@@ -42,18 +46,20 @@ describe('env', () => {
   it('serverEnv returns the typed server vars when all are set', async () => {
     const { serverEnv } = await import('./env');
     expect(serverEnv()).toEqual({
-      PRIVY_APP_SECRET: 'privy-secret',
+      LEDGER_MODE: 'chain',
+      LEDGER_RPC_URL: 'https://ledger.example',
+      LEDGER_CONTRACT_ADDRESS: `0x${'b'.repeat(40)}`,
+      LEDGER_DEPLOY_BLOCK: 12345,
+      RELAYER_PRIVATE_KEY: `0x${'a'.repeat(64)}`,
       DATABASE_URL: 'postgresql://user:pass@host/db',
-      BASE_SEPOLIA_RPC_URL: 'https://sepolia.base.org',
-      SPONSOR_PRIVATE_KEY: `0x${'a'.repeat(64)}`,
-      ANCHOR_DEPLOY_BLOCK: 12345,
+      SESSION_SECRET: 's'.repeat(32),
     });
   });
 
   it('serverEnv names a missing var and never prints values', async () => {
-    setEnv({ ...VALID, PRIVY_APP_SECRET: undefined });
+    setEnv({ ...VALID, SESSION_SECRET: undefined });
     const { serverEnv } = await import('./env');
-    expect(() => serverEnv()).toThrow('PRIVY_APP_SECRET');
+    expect(() => serverEnv()).toThrow('SESSION_SECRET');
   });
 
   it('serverEnv names an invalid var without echoing its value', async () => {
@@ -69,19 +75,32 @@ describe('env', () => {
     expect(message).not.toContain('not-a-url-secret-value');
   });
 
-  it('serverEnv rejects an empty ANCHOR_DEPLOY_BLOCK', async () => {
-    setEnv({ ...VALID, ANCHOR_DEPLOY_BLOCK: '' });
+  it('serverEnv rejects an empty LEDGER_DEPLOY_BLOCK', async () => {
+    setEnv({ ...VALID, LEDGER_DEPLOY_BLOCK: '' });
     const { serverEnv } = await import('./env');
-    expect(() => serverEnv()).toThrow('ANCHOR_DEPLOY_BLOCK');
+    expect(() => serverEnv()).toThrow('LEDGER_DEPLOY_BLOCK');
   });
 
   it('clientEnv returns the typed client vars and names a bad one', async () => {
     const { clientEnv } = await import('./env');
-    expect(clientEnv().NEXT_PUBLIC_PRIVY_APP_ID).toBe('privy-app-id');
+    expect(clientEnv()).toEqual({
+      NEXT_PUBLIC_APP_URL: 'https://constancia.example',
+      NEXT_PUBLIC_LEDGER_MODE: 'chain',
+      NEXT_PUBLIC_LEDGER_CHAIN_ID: 24024,
+      NEXT_PUBLIC_ENTRY_POINT_ADDRESS: `0x${'c'.repeat(40)}`,
+      NEXT_PUBLIC_ACCOUNT_FACTORY_ADDRESS: `0x${'d'.repeat(40)}`,
+      NEXT_PUBLIC_DEMO_MODE: '1',
+    });
 
     vi.resetModules();
-    setEnv({ ...VALID, NEXT_PUBLIC_ANCHOR_CONTRACT_ADDRESS: '0x123' });
+    setEnv({ ...VALID, NEXT_PUBLIC_ACCOUNT_FACTORY_ADDRESS: '0x123' });
     const fresh = await import('./env');
-    expect(() => fresh.clientEnv()).toThrow('NEXT_PUBLIC_ANCHOR_CONTRACT_ADDRESS');
+    expect(() => fresh.clientEnv()).toThrow('NEXT_PUBLIC_ACCOUNT_FACTORY_ADDRESS');
+  });
+
+  it('clientEnv defaults NEXT_PUBLIC_DEMO_MODE to 0', async () => {
+    setEnv({ ...VALID, NEXT_PUBLIC_DEMO_MODE: undefined });
+    const { clientEnv } = await import('./env');
+    expect(clientEnv().NEXT_PUBLIC_DEMO_MODE).toBe('0');
   });
 });

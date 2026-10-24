@@ -3,7 +3,7 @@ import { setHandoffFile, takeHandoffFile } from './handoff';
 
 describe('handoff', () => {
   it('returns the set file once, then null', () => {
-    const file = new File(['%PDF-1.4'], 'a.pdf', { type: 'application/pdf' });
+    const file = new File(['eyJ'], 'a.sdjwt', { type: 'text/plain' });
     setHandoffFile(file);
     expect(takeHandoffFile()).toBe(file);
     expect(takeHandoffFile()).toBeNull();

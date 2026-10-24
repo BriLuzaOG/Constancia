@@ -3,27 +3,38 @@
 import { useEffect } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
 
-function isPdf(file: File): boolean {
-  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-}
-
 const hasFiles = (event: globalThis.DragEvent) => event.dataTransfer?.types.includes('Files');
+
+// '.ext' entries match the file name suffix; anything else is an exact MIME type
+function accepts(file: File, accept: string): boolean {
+  const name = file.name.toLowerCase();
+  return accept
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .some((entry) => (entry.startsWith('.') ? name.endsWith(entry) : file.type === entry));
+}
 
 // Meant to sit inside a LineField: the white gap cut into the band (see /dev/kit).
 export function DropZone({
   onFile,
+  onFiles,
+  multiple = false,
+  accept = '.sdjwt,.json,.txt',
   label,
   hint,
   disabled = false,
 }: {
-  onFile: (file: File) => void;
+  onFile?: (file: File) => void;
+  onFiles?: (files: File[]) => void;
+  multiple?: boolean;
+  accept?: string;
   label: string;
   hint?: string;
   disabled?: boolean;
 }) {
   // A file dragged anywhere over the page sets html[data-dragging]; globals.css locks every
   // line field into alignment and inverts the drop slot. Drops outside the slot are swallowed
-  // so the browser never navigates away to the PDF.
+  // so the browser never navigates away to the file.
   useEffect(() => {
     const root = document.documentElement;
     let depth = 0;
@@ -60,10 +71,14 @@ export function DropZone({
     };
   }, [disabled]);
 
-  // shortcut: first file only, upgrade if batch verification is ever needed
   function pick(files: FileList | null | undefined) {
-    const file = files?.[0];
-    if (!disabled && file && isPdf(file)) onFile(file);
+    if (disabled || !files) return;
+    const accepted = [...files]
+      .filter((file) => accepts(file, accept))
+      .slice(0, multiple ? undefined : 1);
+    if (accepted.length === 0) return;
+    onFile?.(accepted[0]);
+    onFiles?.(accepted);
   }
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -92,7 +107,8 @@ export function DropZone({
       {hint ? <span className="max-w-[40ch] text-body">{hint}</span> : null}
       <input
         type="file"
-        accept="application/pdf,.pdf"
+        accept={accept}
+        multiple={multiple}
         disabled={disabled}
         onChange={handleChange}
         className="sr-only"
