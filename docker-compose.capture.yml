@@ -1,0 +1,58 @@
+# Kernel capture stack — rootful Podman (eBPF needs root; rootless cannot load probes).
+#
+#   agent     -> Claude Code (JS 2.1.112 on distro Node) in its own container: the sandbox
+#   collector -> bpftrace, probes 1 2 3 5 -> /var/tmp/trust-agent/capture.jsonl
+#   tls       -> ecapture, TLS plaintext 4 7 -> /var/tmp/trust-agent/tls.log
+#
+# The collectors find the agent through the PID namespace it publishes in /run/trust.
+#
+# Usage (see docs/HOST-SETUP.md):
+#   mkdir -p /var/tmp/trust-agent
+#   sudo podman compose -f docker-compose.capture.yml build
+#   sudo podman compose -f docker-compose.capture.yml up -d collector tls
+#   sudo podman compose -f docker-compose.capture.yml run --rm agent
+name: trust-capture
+
+x-witness: &witness
+  image: localhost/trust-collector:latest
+  privileged: true
+  pid: host
+  environment:
+    OUT_UID: ${OUT_UID:-1000}
+  volumes:
+    - /sys/kernel/debug:/sys/kernel/debug
+    - /sys/kernel/tracing:/sys/kernel/tracing
+    - /var/tmp/trust-agent:/out:z
+    - trust-run:/run/trust
+
+services:
+  agent:
+    build:
+      context: .
+      dockerfile: containers/agent/Containerfile
+    image: localhost/trust-agent:latest
+    stdin_open: true
+    tty: true
+    volumes:
+      # The repo the agent works on. Point AGENT_WORKSPACE elsewhere for a sandbox repo.
+      - ${AGENT_WORKSPACE:-.}:/workspace:z
+      # Keeps the Claude login (~/.claude, ~/.claude.json) between runs.
+      - agent-home:/home/agent
+      - trust-run:/run/trust
+
+  collector:
+    <<: *witness
+    build:
+      context: .
+      dockerfile: containers/collector/Containerfile
+    command: ["actions"]
+
+  tls:
+    <<: *witness
+    command: ["tls"]
+    depends_on:
+      - collector
+
+volumes:
+  agent-home:
+  trust-run:
