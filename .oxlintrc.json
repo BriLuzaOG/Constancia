@@ -13,8 +13,8 @@
   "rules": {
     // Un ciclo de imports entre módulos es un bug de arquitectura, no un estilo.
     "import/no-cycle": "error",
-    // reflect-metadata y los CSS son side-effect imports legítimos.
-    "import/no-unassigned-import": ["error", { "allow": ["reflect-metadata", "**/*.css"] }],
+    // reflect-metadata, server-only y los CSS son side-effect imports legítimos.
+    "import/no-unassigned-import": ["error", { "allow": ["reflect-metadata", "server-only", "**/*.css"] }],
     "typescript/no-explicit-any": "error",
     // Reglas type-aware opinionadas: no atrapan bugs reales en este código
     // (boundaries con `any`, mónadas y casts controlados con type guards)
