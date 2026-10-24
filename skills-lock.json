@@ -25,6 +25,12 @@
       "skillPath": "skills/ponytail/SKILL.md",
       "computedHash": "9feedbe220d039ba30720217b3fce16214817063fb54a48843d89368c86554e9"
     },
+    "scroll-world": {
+      "source": "oso95/scroll-world",
+      "sourceType": "github",
+      "skillPath": "skills/scroll-world/SKILL.md",
+      "computedHash": "07ad6d6bad1e154a271e7bf1ef582b4e56c892caba56aff2674e761dc34c6859"
+    },
     "simplify": {
       "source": "brianlovin/agent-config",
       "sourceType": "github",
