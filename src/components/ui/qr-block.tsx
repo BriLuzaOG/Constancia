@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { Button } from './button';
 
+// literal black on white: a theme token could drift to grey and lose scan contrast
+const QR_OPTIONS = {
+  margin: 2,
+  width: 320,
+  color: { dark: '#000000', light: '#ffffff' },
+};
+
 export function QrBlock({
   value,
   label,
@@ -20,7 +27,7 @@ export function QrBlock({
     let active = true;
     async function render() {
       try {
-        const url = await QRCode.toDataURL(value, { margin: 1 });
+        const url = await QRCode.toDataURL(value, QR_OPTIONS);
         if (active) setSrc(url);
       } catch {
         if (active) setSrc(null);
@@ -56,12 +63,16 @@ export function QrBlock({
       <div className="border-4 border-ink bg-white p-2">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element -- data URL from a local QR render
-          <img src={src} alt={label} className="size-48" />
+          <img
+            src={src}
+            alt={label}
+            className="size-56 sm:size-80 [image-rendering:pixelated]"
+          />
         ) : (
-          <div className="size-48" aria-hidden="true" />
+          <div className="size-56 sm:size-80" aria-hidden="true" />
         )}
       </div>
-      <p className="text-small">{label}</p>
+      <p className="text-body font-bold">{label}</p>
       {copy ? (
         <Button
           variant="secondary"

@@ -43,7 +43,7 @@ export const MARK: Partial<Record<RowStatus, string>> = {
   NOT_EXAMINED: 'M5 10h10',
 };
 
-function Chip({ status }: { status: RowStatus }) {
+export function Chip({ status }: { status: RowStatus }) {
   const mark = MARK[status];
   return (
     <span

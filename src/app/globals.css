@@ -224,6 +224,11 @@
     z-index: 2;
   }
 
+  /* Timeline gap: the interval where the spine is broken */
+  .gap-hatch {
+    background-image: repeating-linear-gradient(45deg, var(--color-ink) 0 2px, transparent 2px 9px);
+  }
+
   /* CheckRow chip: three tiny line layers that interfere while checking */
   .chip-lines {
     background-image:

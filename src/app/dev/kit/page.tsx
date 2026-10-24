@@ -27,6 +27,15 @@ const TIMELINE: TimelineItem[] = [
     status: 'VERIFIED',
   },
   {
+    id: 'c',
+    employer: 'Empresa Demo C',
+    title: 'Assistant (synthetic)',
+    start: '2022-06',
+    end: '2023-10',
+    status: 'FAILED',
+    note: 'Employer letter did not match',
+  },
+  {
     id: 'b',
     employer: 'Empresa Demo B',
     title: 'Coordinator (synthetic)',
@@ -142,16 +151,26 @@ export default function KitPage() {
 
       <Section title="Timeline">
         <div className="max-w-2xl">
-          <Timeline items={TIMELINE} gaps={[{ from: '2023-08', to: '2024-01', months: 5 }]} />
+          <Timeline
+            items={TIMELINE}
+            gaps={[{ from: '2023-10', to: '2024-01', months: 3 }]}
+            overlaps={[{ a: 'a', b: 'c' }]}
+          />
         </div>
       </Section>
 
       <Section title="QrBlock">
-        <QrBlock
-          value="https://constancia.example/share#demo-fragment"
-          label="Share link (synthetic)"
-          copy
-        />
+        <div className="flex flex-wrap gap-12">
+          <QrBlock
+            value="https://constancia.example/share#demo-fragment"
+            label="Share link (synthetic)"
+            copy
+          />
+          <QrBlock
+            value="https://constancia.example/verify#demo-fragment"
+            label="Verifier link (synthetic)"
+          />
+        </div>
       </Section>
 
       <Section title="Receipt">
