@@ -317,6 +317,6 @@ Run these in a follow-up session (`resume`), in this order:
 2. **Visual pass on S1 to S3**, skipped in autopilot: screenshots at 1440, 1280x720, 390, the
    impeccable detector, the finish reviewer. Regenerate `.impeccable/design.json` with the documenter
    and run the `reviewer` in DESIGN.md audit mode. Folds into A1-S8 (items 2, 4, 6).
-3. **Submission** (A1-S9 leftovers): `deploy-url` in `platanus-hack-project.jsonc` once H7 gives the
-   Render URL; the root `README.md` once the team decides on the banana rule.
+3. **Submission** (A1-S9 leftovers): `deploy-url` and the README "Deploy" line in `platanus-hack-project.jsonc` once H7 gives the
+   Render URL.
 4. The landing drop goes to `/verify`, which is A2's: check it works end to end at A1-S7.

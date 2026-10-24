@@ -209,7 +209,7 @@ ledger (M3), the `/ledger` page.
 | H4 | **Render:** mirror the repo to a personal GitHub (see root README) → Blueprint → the web service → set env vars → GitHub secrets for CD. The static `waraira-university` service is gone: remove it from the blueprint | A1's human |
 | H5 | **Secrets:** A3 generates `RELAYER_PRIVATE_KEY` (a throwaway key with no funds), A4 generates `SESSION_SECRET`. Share everything in a private channel; each dev creates `.env.local` from `.env.example` | everyone |
 | H6 | **Demo browsers:** three Chrome profiles named Registrar, Holder and Recruiter (the recruiter one in incognito), zoom 125 % | the presenter's team |
-| H7 | **Submission:** put the Render URL in `deploy-url` (`platanus-hack-project.jsonc`) and decide who writes the final root `README.md` (the organisers' banana rule; draft in `docs/plan/readme-draft.md`) | the team, then A1 |
+| H7 | **Submission:** (README done, banana rule dropped) put the Render URL in `deploy-url` (`platanus-hack-project.jsonc`) | the team, then A1 |
 
 The demo employers, members and employees are fictional ("Empresa Demo A", "Banco Demo", …). Label
 them as demos everywhere and never use a real company's name.
