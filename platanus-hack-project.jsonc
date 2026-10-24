@@ -1,12 +1,12 @@
 {
   // Your project's name, as it will appear on the voting page.
-  "project-name": "<FILL THIS>",
+  "project-name": "AUDGENTIC",
 
   // Short one-line summary of your project (in Spanish).
-  "project-oneliner-spanish": "<FILL THIS>",
+  "project-oneliner-spanish": "La caja negra de los agentes de IA: trazas a prueba de manipulación que cualquiera puede verificar.",
 
   // Brief description of your project (in Spanish).
-  "project-description-spanish": "<FILL THIS>",
+  "project-description-spanish": "AUDGENTIC registra cada acción de los agentes de IA fuera de su control, la sella con hash-chains, árboles Merkle y firmas post-cuánticas (ML-DSA), y ancla las raíces en una blockchain pública. Si un agente intenta borrar o alterar sus rastros, el verificador lo detecta (hash roto o hueco de secuencia), alerta al equipo de seguridad y permite activar un kill switch. Cualquier auditor puede comprobar la evidencia contra el anclaje público sin tener que confiar en la empresa.",
 
   // Public URL where your project is deployed and running.
   // Must be a valid URL, for example: https://my-project.vercel.app
