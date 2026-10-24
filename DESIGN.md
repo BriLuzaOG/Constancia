@@ -110,8 +110,6 @@ components:
     size: "112px"
 ---
 
-<!-- PROVISIONAL until A1-S2 finishes: tokens and primitives are final; landing patterns come in S2. -->
-
 # Design System: Constancia
 
 ## Overview
@@ -168,7 +166,7 @@ The line inks. Never body text.
 - **Headline** (800, clamp 32px to 56px, 1.0, -0.025em, width 125): PageHeader titles (a 4px ink rule below, nothing above), section headings, the drop-slot label.
 - **Title** (24px, 1.2): check labels at 700 and normal width; Panel, CheckList and Receipt titles at 800 and width 125.
 - **Body** (400, 17px, 1.55): paragraphs and detail lines, at most 65ch.
-- **Small** (400, 14px, 1.45): hints, footnotes, the issuer line. Field labels and status words are bold; status words are uppercase with wide tracking (0.025em).
+- **Small** (400, 14px, 1.45): hints, footnotes, the employer line. Field labels and status words are bold; status words are uppercase with wide tracking (0.025em).
 - **Mono** (400, 0.92em, tabular numerals): credential IDs, hashes, measured values.
 
 Width 125 is `font-stretch: expanded`, set alongside the size on every display, headline and expanded title; the size tokens alone render at normal width.
@@ -218,10 +216,10 @@ Square. Every box is a rectangle with a 2px, 3px or 4px ink border (hairline `Ru
 - Index, a 36px chip, the label with its detail, and the status word with the measured value on the right. The chip interferes (three small line layers) while CHECKING and resolves to a solid square with a mark: check on green, cross on red, bang on yellow, dash on dashed paper (not examined), check on ink (done). CheckList is not a live region; the verifier page owns per-check announcements.
 
 ### Verdict (signature)
-- A resolved band under a 4px ink border: a white mark square and a huge expanded word over a flooded line field, then the reason and the issuer domain on white. It mounts as lines and floods once; the result is announced through an `sr-only` status region. The unavailable word sits on a solid yellow plate so it stays legible over the hatching.
+- A resolved band under a 4px ink border: a white mark square and a huge expanded word over a flooded line field, then the reason and the employer name on white. It mounts as lines and floods once; the result is announced through an `sr-only` status region. The unavailable word sits on a solid yellow plate so it stays legible over the hatching.
 
 ### Drop Zone
-- A white gap with a 4px ink border, intended to sit inside a line field. Keyboard and file-input fallback, credential files (.sdjwt, .json, .txt). Drops outside the slot are swallowed so the browser never navigates to the file.
+- A white gap with a 4px ink border, intended to sit inside a line field. Keyboard and file-input fallback, credential files (.sdjwt, .json, .txt). The drop slot label reads as an action ("Drop a certificate to check it"). Drops outside the slot are swallowed so the browser never navigates to the file.
 
 ### Claim List
 - One row per claim. **Shown:** an open line field with the value in ink on a white plate. **Hidden:** the row's field resolved into a solid ink bar with the word "Hidden"; the value is never rendered, never blurred. **On/off:** a square toggle with a 3px ink border, a drawn mark when on, , 48px target. State is never colour alone.
@@ -231,6 +229,9 @@ Square. Every box is a rectangle with a 2px, 3px or 4px ink border (hairline `Ru
 
 ### QR Block
 - Black on white, square, 4px ink border, 224px growing to 320px, with the label underneath and an optional Copy link. Sized to scan from a phone at 1280x720 on a projector.
+
+### Landing band (signature)
+- The first viewport is the line field at full bleed between two 4px ink rules, in the lower half. The drop slot is a white gap cut into the right of the band; the primary and outline buttons and the employer link sit on a paper plate on the left so no text ever sits on bare lines. At rest the band shifts with the pointer; on a drop it locks into alignment (scanning at progress 5) and the page moves to the verifier. Headline: display size, expanded, left, at most three lines.
 
 ### Receipt
 - A ledger: a 4px ink rule, an expanded 800 title at Title size, rows of label and value separated by hairlines, mono for identifiers, muted rows for what was not sent or stored.
