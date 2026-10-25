@@ -1,0 +1,64 @@
+import type { ClaimView } from '@/components/ui/claim-list';
+import { REVEAL_TEMPLATES } from '@/lib/credential/present';
+import type { ClaimName, DisclosedClaims } from '@/lib/credential/types';
+import { CLAIM_LABELS, formatClaim } from './claims';
+
+export type TemplateName = keyof typeof REVEAL_TEMPLATES;
+
+export const TEMPLATE_LABELS: Record<TemplateName, string> = {
+  employment: 'Proof of employment',
+  income: 'Proof of income',
+  role: 'Role',
+  identity: 'Identity',
+  full: 'Everything',
+};
+
+export const EXPIRIES = [
+  { label: '1 hour', ttlSec: 3600 },
+  { label: '24 hours', ttlSec: 86_400 },
+  { label: '7 days', ttlSec: 604_800 },
+] as const;
+
+export const MAX_AUDIENCE = 40;
+
+/** The claims a template reveals, limited to what this certificate actually holds. */
+export function templateReveal(template: TemplateName, claims: DisclosedClaims): ClaimName[] {
+  return REVEAL_TEMPLATES[template].filter((name) => claims[name] !== undefined);
+}
+
+export const revealsIdentity = (reveal: ClaimName[]) => reveal.includes('nationalId');
+
+/** Every held claim as a toggle (builder) or as the reader would see it (preview). */
+export function claimViews(
+  claims: DisclosedClaims,
+  reveal: ClaimName[],
+  mode: 'toggle' | 'preview',
+): ClaimView[] {
+  return REVEAL_TEMPLATES.full
+    .filter((name) => claims[name] !== undefined)
+    .map((name) => {
+      const on = reveal.includes(name);
+      const state: ClaimView['state'] =
+        mode === 'toggle' ? (on ? 'on' : 'off') : on ? 'shown' : 'hidden';
+      return {
+        name,
+        label: mode === 'preview' && !on ? 'Not shown' : CLAIM_LABELS[name],
+        value: on ? formatClaim(claims[name]) : undefined,
+        state,
+      };
+    });
+}
+
+export function toggleClaim(reveal: ClaimName[], name: ClaimName, next: boolean): ClaimName[] {
+  const without = reveal.filter((claim) => claim !== name);
+  return next ? [...without, name] : without;
+}
+
+const FRAGMENT_PATTERN = /^#s=[0-9a-f]{32}\.[A-Za-z0-9_-]+$/;
+
+/** The key sits in the fragment: the browser never sends it to a server. */
+export function shareLink(appUrl: string, id: string, key: string): string {
+  const link = `${appUrl.replace(/\/$/, '')}/verify#s=${id}.${key}`;
+  if (!FRAGMENT_PATTERN.test(link.slice(link.indexOf('#')))) throw new Error('Unexpected share id');
+  return link;
+}
