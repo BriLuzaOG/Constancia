@@ -50,3 +50,8 @@ export function chainSettings(): { client: ChainClient; config: ChainConfig } {
     },
   };
 }
+
+// The Ledger's address for write clients (browsers have no server env); absent in memory mode.
+export function ledgerAddress(): `0x${string}` | undefined {
+  return process.env.LEDGER_MODE === 'chain' ? chainEnv().LEDGER_CONTRACT_ADDRESS : undefined;
+}

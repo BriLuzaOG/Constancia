@@ -6,7 +6,7 @@ import { CheckList, CheckRow } from '@/components/ui/check-list';
 import { Field } from '@/components/ui/field';
 import { listSignerNames, loadSigner } from '@/lib/credential/keystore';
 import type { Address } from '@/lib/credential/types';
-import { createAccountClient } from '@/lib/ledger/account-client';
+import { createAccountClient, LedgerWriteError } from '@/lib/ledger/account-client';
 import type { TxResult } from '@/lib/ledger/account-client';
 import { useNetworkState } from '../_lib/use-network-state';
 
@@ -45,8 +45,12 @@ export function OperatorConsole() {
       if (!signer) throw new Error('missing signer');
       const client = await createAccountClient({ signer });
       setResult(await client[action](issuer));
-    } catch {
-      setError('The ledger did not accept that. Check the member and try again.');
+    } catch (caught) {
+      setError(
+        caught instanceof LedgerWriteError
+          ? caught.message
+          : 'The ledger did not accept that. Check the member and try again.',
+      );
     } finally {
       setBusy(false);
     }
@@ -139,6 +143,12 @@ export function OperatorConsole() {
           </ul>
         )}
       </section>
+
+      {busy ? (
+        <p role="status" className="text-body">
+          Writing to the ledger. A block takes about 12 seconds…
+        </p>
+      ) : null}
 
       {error ? (
         <p role="alert" className="border-2 border-red-text p-4 font-bold text-red-text">

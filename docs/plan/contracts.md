@@ -592,7 +592,7 @@ routes need the session cookie set by `/api/auth/session`. Never log a body.
 | --- | --- | --- | --- | --- |
 | `POST /api/ledger/lookup` (public) | A3 | `LookupRequest` | `LookupResponse` | 400 `BAD_REQUEST` · 503 `LEDGER_UNREACHABLE` |
 | `GET /api/ledger/state` (public) | A3 | — | `NetworkState` | 503 `LEDGER_UNREACHABLE` |
-| `GET /api/ledger/account?x=&y=&salt=` | A3 | — | `{ address, deployed }` | 400 |
+| `GET /api/ledger/account?x=&y=&salt=` | A3 | — | `{ address, deployed, ledger? }` (`ledger` = Ledger.sol address, chain mode only: write clients need it) | 400 |
 | `GET /api/did/resolve?did=` | A3 | — | DID document (6) | 400 · 404 `DID_NOT_FOUND` |
 | `POST /api/bundler` | A3 | JSON-RPC (7) | JSON-RPC | rate limited |
 | `POST /api/dev/ledger/op`, `GET /api/dev/ledger/identities` | A3 | dev only, 404 in production | | |

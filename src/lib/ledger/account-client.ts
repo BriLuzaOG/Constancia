@@ -1,4 +1,5 @@
-// Isomorphic (browser, Node scripts). Memory client: account-client-memory.ts; chain client: A3-S6.
+// Isomorphic (browser, Node scripts). Memory client: account-client-memory.ts; chain client: account-client-chain.ts.
+import { createChainAccountClient } from './account-client-chain';
 import { createMemoryAccountClient } from './account-client-memory';
 import type { AccountClient, AccountClientArgs } from './account-types';
 
@@ -9,6 +10,5 @@ export type { AccountClient, AccountClientArgs, TxResult } from './account-types
 const ledgerMode = () => process.env.NEXT_PUBLIC_LEDGER_MODE ?? process.env.LEDGER_MODE;
 
 export async function createAccountClient(args: AccountClientArgs): Promise<AccountClient> {
-  if (ledgerMode() === 'chain') throw new Error('not implemented: A3-S6');
-  return createMemoryAccountClient(args);
+  return ledgerMode() === 'chain' ? createChainAccountClient(args) : createMemoryAccountClient(args);
 }

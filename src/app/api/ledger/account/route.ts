@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { badRequest, respondWithLedger } from '@/lib/ledger/gateway';
+import { ledgerAddress } from '@/lib/ledger/public-client';
 import { getLedgerReader } from '@/lib/ledger/reader';
 
 const COORDINATE = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
@@ -19,6 +20,7 @@ export async function GET(request: Request) {
   return respondWithLedger(async () => {
     const reader = getLedgerReader();
     const address = await reader.accountAddress({ kty: 'EC', crv: 'P-256', x, y }, BigInt(salt));
-    return Response.json({ address, deployed: await reader.isDeployed(address) });
+    const deployed = await reader.isDeployed(address);
+    return Response.json({ address, deployed, ...(ledgerAddress() && { ledger: ledgerAddress() }) });
   });
 }
