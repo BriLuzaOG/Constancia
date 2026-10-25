@@ -33,9 +33,8 @@ export interface NetworkState {
   blockTimeSec: number;
   quorum: number;
   members: { account: Address; name: string }[];
-  validators: { address: Address; name: string | null }[];
   issuers: IssuerInfo[];
-  blocks: { number: number; time: number; proposer: Address; txCount: number }[]; // last 16, proposer = block.miner
+  blocks: { number: number; time: number; txCount: number }[]; // last 16
   anchors: { credentialHash: Hex; issuer: Address; blockNumber: number; time: number }[]; // last 10, hashes only
 }
 export interface LookupRequest {

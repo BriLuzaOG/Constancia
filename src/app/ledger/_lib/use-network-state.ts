@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import type { NetworkState } from '@/lib/ledger/types';
 import { loadState } from './load-state';
 
-const POLL_MS = 2000;
+const POLL_MS = 6000;
 
 export type NetworkView =
   | { status: 'loading' }

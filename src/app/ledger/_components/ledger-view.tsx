@@ -121,7 +121,7 @@ export function LedgerView() {
       <div role="alert" className="mt-12 border-4 border-ink bg-line-yellow p-6">
         <p className="text-title font-bold">The ledger isn&apos;t answering right now.</p>
         <p className="mt-2 text-body">
-          Your certificates are not affected. This page tries again every two seconds.
+          Your certificates are not affected. This page tries again every few seconds.
         </p>
       </div>
     );
@@ -136,7 +136,7 @@ export function LedgerView() {
           <span className="text-ink-muted"> · {ageLabel(state.head.time, now)}</span>
         </p>
         <p className="mt-1 text-body text-ink-muted">
-          {state.validators.length} validators · {state.blockTimeSec} s blocks · fees: none
+          Public Sepolia · {state.blockTimeSec} s blocks · fees: none
         </p>
       </div>
       <BlockStrip state={state} />
@@ -150,9 +150,10 @@ export function LedgerView() {
           How this ledger is run
         </h2>
         <p className="max-w-[65ch] text-body">
-          A group of members, not one company, runs the validators and decides which employers are
-          accredited. In this demo all four validators run on one machine, and this page reads from
-          a single gateway. In production each member would run its own validator.
+          A group of members, not one company, decides which employers are accredited. The record
+          lives on the public Sepolia test network, and one consortium wallet pays every fee, so
+          nobody who uses Constancia ever sees a wallet or a cost. This page reads from a single
+          gateway.
         </p>
       </section>
       <Disclosure summary="Technical details">
