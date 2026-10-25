@@ -1,5 +1,7 @@
 import 'server-only';
+import { createChainReader } from './chain';
 import { getMemoryWorld } from './memory';
+import { chainSettings } from './public-client';
 import type { LedgerReader } from './types';
 
 const memoryLedger = async () => (await getMemoryWorld()).ledger.reader();
@@ -16,10 +18,18 @@ const memoryReader: LedgerReader = {
   isDeployed: async (account) => (await memoryLedger()).isDeployed(account),
 };
 
+// One reader per process: it holds the short-lived state cache.
+const shared = globalThis as { __constanciaChainReader?: LedgerReader };
+const chainReader = () =>
+  (shared.__constanciaChainReader ??= (() => {
+    const { client, config } = chainSettings();
+    return createChainReader(client, config);
+  })());
+
 // by LEDGER_MODE: 'memory' (dev and tests only) | 'chain'
 export function getLedgerReader(): LedgerReader {
   const mode = process.env.LEDGER_MODE ?? (process.env.NODE_ENV === 'production' ? '' : 'memory');
   if (mode === 'memory') return memoryReader;
-  if (mode === 'chain') throw new Error('not implemented: A3-S5');
+  if (mode === 'chain') return chainReader();
   throw new Error('LEDGER_MODE must be "memory" or "chain"');
 }
