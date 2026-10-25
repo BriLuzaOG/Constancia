@@ -4,10 +4,10 @@ import { sepolia } from 'viem/chains';
 import { accountFactoryAbi, consortiumAccountAbi } from '../../src/lib/ledger/abi';
 import { publicClient } from './config.mjs';
 import { jwkCoordinates, readAddresses, relayer } from './lib.mjs';
+import { rpc } from './userop.mjs';
 
 // A3-S3 spike: a WebCrypto P-256 key controls a zero-balance account on Sepolia; the paymaster pays.
 // Needs the app running (pnpm dev) with the same env: the bundler route is the system under test.
-const BUNDLER_URL = process.env.BUNDLER_URL ?? 'http://localhost:3000/api/bundler';
 const RECEIPT_TIMEOUT_MS = 120_000;
 const SALT = BigInt(0);
 
@@ -15,17 +15,6 @@ const client = publicClient();
 const addresses = readAddresses();
 const factory = (process.env.NEXT_PUBLIC_ACCOUNT_FACTORY_ADDRESS ?? addresses.factory) as Address;
 const paymaster = (process.env.PAYMASTER_ADDRESS ?? addresses.paymaster) as Address;
-
-async function rpc<T>(method: string, params: unknown[]): Promise<T> {
-  const response = await fetch(BUNDLER_URL, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
-  });
-  const body = (await response.json()) as { result?: T; error?: { message: string } };
-  if (body.error) throw new Error(`${method}: ${body.error.message}`);
-  return body.result as T;
-}
 
 async function newDeviceKey() {
   const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);

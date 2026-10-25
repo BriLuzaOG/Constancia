@@ -36,7 +36,9 @@ const FALLBACK_CALL_GAS = BigInt(500_000); // account not deployed yet, so it ca
 const MIN_CALL_GAS = BigInt(100_000);
 const GAS_PATIENCE_TRIES = 5;
 const GAS_PATIENCE_WAIT_MS = 12_000;
-const RECEIPT_TIMEOUT_MS = 120_000;
+const RECEIPT_TIMEOUT_MS = 60_000;
+const MAX_RESUBMITS = 2;
+const FEE_BUMP_PERCENT = 125; // replacements need at least +10%
 const MAX_TRACKED_OPS = 500;
 
 export class BundlerError extends Error {
@@ -267,6 +269,16 @@ async function waitForAffordableGas(ctx: Context) {
   throw new Error('Gas price is above the cap; try again later');
 }
 
+// A stuck handleOps is replaced by the same transaction at a higher fee (same relayer nonce).
+// If the original got mined in the meantime the replacement is rejected and we keep waiting on it.
+async function resubmitWithHigherFee(ctx: Context, request: Parameters<Context['wallet']['writeContract']>[0], stuck: Hex) {
+  const tx = await ctx.client.getTransaction({ hash: stuck });
+  const bump = (fee: bigint | undefined) => ((fee ?? BigInt(0)) * BigInt(FEE_BUMP_PERCENT)) / BigInt(100) + BigInt(1);
+  return ctx.wallet
+    .writeContract({ ...request, nonce: tx.nonce, maxFeePerGas: bump(tx.maxFeePerGas), maxPriorityFeePerGas: bump(tx.maxPriorityFeePerGas) } as never)
+    .catch(() => stuck);
+}
+
 async function submit(ctx: Context, hash: Hex, op: Op) {
   try {
     await waitForAffordableGas(ctx);
@@ -277,9 +289,18 @@ async function submit(ctx: Context, hash: Hex, op: Op) {
       functionName: 'handleOps',
       args: [[toPackedUserOperation(op)], ctx.relayer.address],
     });
-    const txHash = await ctx.wallet.writeContract(request);
+    let txHash = await ctx.wallet.writeContract(request);
     track(hash, { state: 'submitted', txHash, op });
-    await ctx.client.waitForTransactionReceipt({ hash: txHash, timeout: RECEIPT_TIMEOUT_MS });
+    for (let resubmits = 0; ; resubmits++) {
+      try {
+        await ctx.client.waitForTransactionReceipt({ hash: txHash, timeout: RECEIPT_TIMEOUT_MS });
+        return;
+      } catch (error) {
+        if (resubmits >= MAX_RESUBMITS) throw error;
+        txHash = await resubmitWithHigherFee(ctx, request, txHash);
+        track(hash, { state: 'submitted', txHash, op });
+      }
+    }
   } catch (error) {
     track(hash, { state: 'failed', error: error instanceof Error ? error.message.split('\n')[0] : 'failed' });
   }

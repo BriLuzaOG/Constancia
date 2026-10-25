@@ -1,4 +1,4 @@
-import { createPublicClient, http, type Address } from 'viem';
+import { createPublicClient, fallback, http, type Address } from 'viem';
 import { sepolia } from 'viem/chains';
 
 export const ENTRY_POINT: Address = '0x0000000071727De22E5E9d8BAf0edAc6f37da032';
@@ -21,6 +21,8 @@ export function rpcUrl(): string {
   return url ?? SEPOLIA_PUBLIC_RPC;
 }
 
-export function publicClient(url = rpcUrl()) {
-  return createPublicClient({ chain: sepolia, transport: http(url) });
+// Sin url explícita usa el RPC principal y, si existe, el de respaldo (failover).
+export function publicClient(url?: string) {
+  const urls = url ? [url] : [rpcUrl(), env('LEDGER_RPC_URL_BACKUP')].filter((u): u is string => u !== undefined);
+  return createPublicClient({ chain: sepolia, transport: fallback(urls.map((u) => http(u))) });
 }

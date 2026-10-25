@@ -22,7 +22,9 @@
     "chain:deploy": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/deploy.mts",
     "chain:deposit": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/deposit.mts",
     "chain:spike": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/aa-spike.mts",
-    "chain:identities": "tsx scripts/chain/identities.mts"
+    "chain:identities": "tsx scripts/chain/identities.mts",
+    "chain:seed": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/seed.mts",
+    "check:demo": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-demo.mts"
   },
   "dependencies": {
     "@noble/curves": "^2.4.0",

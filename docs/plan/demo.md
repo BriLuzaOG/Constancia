@@ -97,6 +97,25 @@ this exact script; run `pnpm chain:status` (Sepolia fresh block, sponsor funded,
 team drive. **After every rehearsal**, delete the rehearsal certificates from the Holder's vault and
 revoke them in `/employer/issued`, so the live CV beat shows exactly three entries.
 
+**Chain commands (Sepolia persists: nothing here is redone for the demo)**
+
+| When | Command | What it does |
+| --- | --- | --- |
+| Any time | `pnpm chain:status` | Sepolia block age, sponsor balance, contracts, paymaster deposit |
+| Deposit below 0.05 ETH | `pnpm chain:deposit 0.1` | Moves sponsor ETH into the paymaster's deposit (it keeps a 0.02 ETH float) |
+| First time only | `pnpm chain:identities`, `pnpm chain:deploy`, `pnpm chain:seed` | Demo keys, contracts, accredited employers, `public/demo/sample.json`, `demo-pack/vault.json`. `chain:seed` needs the app running with the chain env (`BUNDLER_URL` points elsewhere) and is idempotent |
+| Pre-flight | `pnpm check:demo` | Green/red table; exit code 1 on any red row |
+
+**Faucet runbook (sponsor balance low):** the sponsor address is the one `pnpm chain:status` prints. Top it
+up to at least 0.5 ETH from the Alchemy Sepolia faucet, then the Google Cloud Web3 faucet, the Infura
+faucet and the PoW faucet (sepolia-faucet.pk910.de, slow but unlimited), rotating when one rate-limits.
+Then `pnpm chain:deposit 0.1`. Gas patience: the bundler waits while Sepolia gas is above 100 gwei
+(`BUNDLER_MAX_GAS_GWEI`), so a spike delays a write instead of draining the sponsor.
+
+**RPC failover drill:** with `LEDGER_RPC_URL_BACKUP` set, the bundler and the gateway fall back to it.
+Rehearse by pointing `LEDGER_RPC_URL` at a dead host, then run `pnpm check:demo`: the "RPC" row goes red
+and "RPC backup" stays green; `/verify` must keep working. Restore the URL afterwards.
+
 **T−15 min:**
 - [ ] `pnpm check:demo` against production: all green (Sepolia fresh block on both RPC URLs, sponsor
       and paymaster floors, contract and EntryPoint present, relayer, lookup, sample verifies, DB).
