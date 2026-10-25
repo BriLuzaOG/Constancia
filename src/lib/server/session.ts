@@ -1,17 +1,9 @@
 import 'server-only';
 import type { Address, Hex } from '../credential/types';
+import { HttpError } from './http';
 
-export class HttpError extends Error {
-  readonly status: number;
-  readonly code: string;
-  constructor(status: number, code: string, message = code) {
-    super(message);
-    this.name = 'HttpError';
-    this.status = status;
-    this.code = code;
-  }
-}
+export { HttpError };
 
 export async function requireEmployer(_req: Request): Promise<{ account: Address; keyId: Hex }> {
-  throw new Error('not implemented: A4-S2');
+  throw new HttpError(401, 'UNAUTHENTICATED', 'Sign in first');
 }

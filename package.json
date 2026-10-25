@@ -24,6 +24,9 @@
     "chain:spike": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/aa-spike.mts",
     "chain:identities": "tsx scripts/chain/identities.mts",
     "chain:seed": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/seed.mts",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate",
     "check:demo": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-demo.mts"
   },
   "dependencies": {
