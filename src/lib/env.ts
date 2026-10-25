@@ -18,6 +18,7 @@ const SERVER_SCHEMA = z.object({
   LEDGER_CONTRACT_ADDRESS: ADDRESS,
   // Digits only: z.coerce.number() would turn an empty value into 0.
   LEDGER_DEPLOY_BLOCK: z.string().regex(/^\d+$/).transform(Number),
+  PAYMASTER_ADDRESS: ADDRESS,
   RELAYER_PRIVATE_KEY: z
     .string()
     .regex(/^0x[0-9a-fA-F]{64}$/)

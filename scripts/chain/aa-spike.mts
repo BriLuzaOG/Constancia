@@ -3,7 +3,7 @@ import { entryPoint07Abi, entryPoint07Address, getUserOperationHash } from 'viem
 import { sepolia } from 'viem/chains';
 import { accountFactoryAbi, consortiumAccountAbi } from '../../src/lib/ledger/abi';
 import { publicClient } from './config.mjs';
-import { readAddresses, relayer } from './lib.mjs';
+import { jwkCoordinates, readAddresses, relayer } from './lib.mjs';
 
 // A3-S3 spike: a WebCrypto P-256 key controls a zero-balance account on Sepolia; the paymaster pays.
 // Needs the app running (pnpm dev) with the same env: the bundler route is the system under test.
@@ -27,15 +27,10 @@ async function rpc<T>(method: string, params: unknown[]): Promise<T> {
   return body.result as T;
 }
 
-function base64UrlToHex(value: string): Hex {
-  return `0x${Buffer.from(value, 'base64url').toString('hex').padStart(64, '0')}`;
-}
-
 async function newDeviceKey() {
   const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
   const jwk = await crypto.subtle.exportKey('jwk', pair.publicKey);
-  const x = base64UrlToHex(jwk.x as string);
-  const y = base64UrlToHex(jwk.y as string);
+  const { x, y } = jwkCoordinates(jwk as { x: string; y: string });
   return { privateKey: pair.privateKey, x, y, keyId: keccak256(encodePacked(['bytes32', 'bytes32'], [x, y])) };
 }
 
