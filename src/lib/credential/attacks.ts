@@ -109,7 +109,7 @@ async function fakeEmployer(sample: Sample): Promise<Presented> {
   const [, context] = payload['@context'] as string[];
   const issued = await issueCredential({
     record: recordFrom(sample),
-    issuer: { did: `did:constancia:24024:${account}`, keyId: signer.keyId },
+    issuer: { did: `did:constancia:11155111:${account}`, keyId: signer.keyId },
     signer,
     holderJwk: holder.jwk,
     appUrl: new URL(context).origin,

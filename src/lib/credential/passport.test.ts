@@ -18,7 +18,7 @@ import { verifyPresentation, type LookupFn, type CheckCode, type CheckEvent, typ
 
 const AUD = 'Banco Demo';
 const TTL_SEC = 3600;
-const CHAIN_DID = (account: Address) => `did:constancia:24024:${account}`;
+const CHAIN_DID = (account: Address) => `did:constancia:11155111:${account}`;
 const CODES: CheckCode[] = ['TOKEN', 'ISSUER', 'SIGNATURE', 'HOLDER', 'LEDGER'];
 const ISSUER_DIRECTORY: { account: Address; name: string }[] = [
   { account: '0x1f9a000000000000000000000000000000000001', name: 'Empresa Demo A' },

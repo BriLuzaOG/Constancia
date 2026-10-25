@@ -12,7 +12,7 @@ import type { ClaimName, EmploymentRecord, P256Jwk } from './types';
 
 const NOW = new Date('2026-10-24T20:00:00Z');
 const APP_URL = 'http://localhost:3000';
-const ISSUER_DID = 'did:constancia:24024:0x1f9a000000000000000000000000000000000001';
+const ISSUER_DID = 'did:constancia:11155111:0x1f9a000000000000000000000000000000000001';
 const TTL_SEC = 3600;
 
 // Current employment: endDate absent, so the issued claims are the other eleven.

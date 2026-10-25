@@ -11,7 +11,7 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const APP_URL = 'https://constancia.test';
 const ACCOUNT = '0x1f9a000000000000000000000000000000000001';
-const DID = `did:constancia:24024:${ACCOUNT}`;
+const DID = `did:constancia:11155111:${ACCOUNT}`;
 
 const pastEmployment: EmploymentRecord = {
   givenName: 'María Fernanda',

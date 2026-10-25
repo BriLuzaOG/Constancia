@@ -6,7 +6,7 @@ import type { Address, EmploymentRecord } from './types';
 
 export const APP_URL = 'http://localhost:3000';
 export const ACCOUNT: Address = '0x1f9a000000000000000000000000000000000001';
-export const DID = `did:constancia:24024:${ACCOUNT}`;
+export const DID = `did:constancia:11155111:${ACCOUNT}`;
 export const ISSUER_NAME = 'Empresa Demo A';
 export const BLOCK_NUMBER = 1204;
 

@@ -46,7 +46,7 @@ export interface VerifyContext {
 }
 
 // shortcut: chain ID fixed to the demo ledger, read it from env when a second network exists.
-const CHAIN_ID = '24024';
+const CHAIN_ID = '11155111';
 const CHECK_CODES: CheckCode[] = ['TOKEN', 'ISSUER', 'SIGNATURE', 'HOLDER', 'LEDGER'];
 const DID_PATTERN = /^did:constancia:(\d+):(0x[0-9a-f]{40})$/;
 const DEFAULT_SKEW_SEC = 300;
