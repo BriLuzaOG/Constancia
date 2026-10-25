@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button, LinkButton } from '@/components/ui/button';
 import { CheckList, CheckRow, type RowStatus } from '@/components/ui/check-list';
 import { Panel } from '@/components/ui/panel';
+import { listDirectory } from '@/lib/employer/directory';
 import { listIdentities, type EmployerIdentity } from '@/lib/employer/identity';
 import { signIn } from '@/lib/employer/session-client';
 import { useMe } from '@/lib/employer/use-me';
@@ -88,7 +89,7 @@ interface Step {
   href: string;
 }
 
-function readinessSteps(issuer: IssuerInfo | undefined): Step[] {
+function readinessSteps(issuer: IssuerInfo | undefined, directoryLoaded: boolean): Step[] {
   const applied = issuer !== undefined && issuer.status !== 'NONE';
   const active = issuer?.status === 'ACTIVE';
   const approvals = issuer ? `${issuer.approvals} of ${issuer.quorum} members approved` : undefined;
@@ -109,7 +110,7 @@ function readinessSteps(issuer: IssuerInfo | undefined): Step[] {
     },
     {
       label: 'Employee directory loaded',
-      status: 'PENDING',
+      status: directoryLoaded ? 'DONE' : 'PENDING',
       detail: 'Employee details stay in this browser and never reach a server.',
       href: '/employer/directory',
     },
@@ -119,6 +120,15 @@ function readinessSteps(issuer: IssuerInfo | undefined): Step[] {
 function Readiness({ account, name }: { account: string; name: string }) {
   const [issuer, setIssuer] = useState<IssuerInfo | undefined>();
   const [unreachable, setUnreachable] = useState(false);
+  const [directoryLoaded, setDirectoryLoaded] = useState(false);
+
+  useEffect(() => {
+    void listDirectory()
+      .then((entries) => {
+        setDirectoryLoaded(entries.length > 0);
+      })
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -142,7 +152,7 @@ function Readiness({ account, name }: { account: string; name: string }) {
     };
   }, [account]);
 
-  const steps = readinessSteps(issuer);
+  const steps = readinessSteps(issuer, directoryLoaded);
   const next = steps.find((step) => step.status !== 'DONE');
 
   return (
