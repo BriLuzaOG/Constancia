@@ -141,8 +141,8 @@ CI runs the same gates on every push to `main` before it triggers the Render dep
   run the validators, and Render cannot host them. One sponsor wallet absorbs every fee, which is the
   property a permissioned network would give for free.
 - All employers, members and people shown are fictional.
-- The Verified CV and the Fake Letter Lab land with the last build; today the deployed demo serves the
-  landing, `/employer`, `/vault`, `/verify` and `/ledger`.
+- The Fake Letter Lab lands with the last build; today the deployed demo serves the landing,
+  `/employer`, `/vault`, `/cv`, `/verify` and `/ledger`.
 
 ## 📚 Docs
 
