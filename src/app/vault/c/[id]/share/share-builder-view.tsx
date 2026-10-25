@@ -1,21 +1,19 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, LinkButton } from '@/components/ui/button';
 import { ClaimList } from '@/components/ui/claim-list';
-import { Field } from '@/components/ui/field';
 import { Panel } from '@/components/ui/panel';
-import { QrBlock } from '@/components/ui/qr-block';
 import { loadSigner } from '@/lib/credential/keystore';
 import { presentCredential } from '@/lib/credential/present';
 import { sealShare } from '@/lib/credential/share-crypto';
 import type { ClaimName } from '@/lib/credential/types';
 import { vaultStore } from '@/lib/vault/browser';
-import { certificateInfo, downloadText } from '@/lib/vault/certificate-info';
+import { certificateInfo } from '@/lib/vault/certificate-info';
 import {
+  appUrl,
   claimViews,
   EXPIRIES,
-  MAX_AUDIENCE,
   revealsIdentity,
   TEMPLATE_LABELS,
   templateReveal,
@@ -26,26 +24,18 @@ import { createShare, NoKeyError, type CreatedShare } from '@/lib/vault/share-fl
 import { recordShare } from '@/lib/vault/share-history';
 import { postShare } from '@/lib/vault/shares-client';
 import type { VaultCertificate } from '@/lib/vault/types';
-
-const appUrl = () => process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+import { AudienceAndExpiry, ShareResult } from '../../../_components/share-fields';
 
 function Builder({ certificate }: { certificate: VaultCertificate }) {
-  const { decoded } = certificateInfo(certificate);
-  const claims = decoded.claims;
+  const claims = certificateInfo(certificate).decoded.claims;
   const [reveal, setReveal] = useState<ClaimName[]>(() => templateReveal('employment', claims));
   const [aud, setAud] = useState('');
   const [ttlSec, setTtlSec] = useState<number>(EXPIRIES[1].ttlSec);
   const [created, setCreated] = useState<CreatedShare | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const linkRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (created) linkRef.current?.focus();
-  }, [created]);
-
-  const audienceError = aud.trim() === '' ? 'Say who this is for' : undefined;
-  const canCreate = reveal.length > 0 && !audienceError && !busy;
+  const canCreate = reveal.length > 0 && aud.trim() !== '' && !busy;
 
   async function create() {
     setBusy(true);
@@ -103,33 +93,7 @@ function Builder({ certificate }: { certificate: VaultCertificate }) {
             This reveals your name and national ID.
           </p>
         )}
-        <Field label="Who is this for?" hint="A label the reader sees, for example Banco Demo.">
-          <input
-            value={aud}
-            maxLength={MAX_AUDIENCE}
-            autoComplete="off"
-            onChange={(event) => {
-              setAud(event.target.value);
-            }}
-          />
-        </Field>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 font-bold text-small">The link works for</legend>
-          {EXPIRIES.map((option) => (
-            <label key={option.ttlSec} className="flex min-h-12 items-center gap-3 text-body">
-              <input
-                type="radio"
-                name="expiry"
-                className="size-5 accent-ink"
-                checked={ttlSec === option.ttlSec}
-                onChange={() => {
-                  setTtlSec(option.ttlSec);
-                }}
-              />
-              {option.label}
-            </label>
-          ))}
-        </fieldset>
+        <AudienceAndExpiry aud={aud} onAud={setAud} ttlSec={ttlSec} onTtl={setTtlSec} />
       </div>
 
       <div className="flex flex-col gap-8">
@@ -163,24 +127,11 @@ function Builder({ certificate }: { certificate: VaultCertificate }) {
         </div>
 
         {created && (
-          <div ref={linkRef} tabIndex={-1} className="outline-none">
-            <Panel title="Your link is ready">
-              <QrBlock value={created.link} label="Link to this share" copy />
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    downloadText('share.sdjwt', created.presentation);
-                  }}
-                >
-                  Download as a file
-                </Button>
-              </div>
-              <p className="mt-4 text-small text-ink-muted">
-                The key to open it is part of the link and never reaches our server.
-              </p>
-            </Panel>
-          </div>
+          <ShareResult
+            title="Your link is ready"
+            link={created.link}
+            file={{ name: 'share.sdjwt', text: created.presentation }}
+          />
         )}
       </div>
     </div>

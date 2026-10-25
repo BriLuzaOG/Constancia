@@ -21,6 +21,9 @@ export const EXPIRIES = [
 
 export const MAX_AUDIENCE = 40;
 
+/** Browser only. The link base: the configured public URL, else the page's own origin. */
+export const appUrl = () => process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+
 /** The claims a template reveals, limited to what this certificate actually holds. */
 export function templateReveal(template: TemplateName, claims: DisclosedClaims): ClaimName[] {
   return REVEAL_TEMPLATES[template].filter((name) => claims[name] !== undefined);

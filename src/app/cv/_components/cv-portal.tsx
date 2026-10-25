@@ -12,6 +12,7 @@ import { vaultStore } from '@/lib/vault/browser';
 import { canJoin, ENTRY_ROW_STATUS, entryNote, timelineItems, timelineOf, type CvEntry } from '@/lib/vault/cv-entries';
 import { useCvEntries } from '@/lib/vault/use-cv-entries';
 import type { VaultCertificate } from '@/lib/vault/types';
+import { CvBuilder } from './cv-builder-view';
 
 const STATUS_WORD = {
   VERIFIED: 'Verified',
@@ -154,6 +155,8 @@ export function CvPortal() {
           <Timeline items={timelineItems(timeline)} gaps={timeline.gaps} overlaps={timeline.overlaps} />
         </Panel>
       )}
+
+      {cv.included.length > 0 && <CvBuilder included={cv.included} />}
     </div>
   );
 }
