@@ -1,36 +1,80 @@
 # Constancia
 
-Constancias de trabajo que se prueban solas y muestran solo lo que el trabajador elige.
+**Tu historial profesional, verificable. Y solo se muestra lo que tú elijas.**
+
+`team-24` · Platanus Hack 26 Caracas · [Demo en vivo](https://platanus-hack-26-ve-team-24-rhg9.onrender.com)
+
+---
 
 ## El problema
 
-Una constancia de trabajo es un PDF que cualquiera falsifica en minutos, y bancos, arrendadores y consulados igual tienen que confiar en él. Quien la presenta, además, entrega todo el documento aunque solo se le pida un dato.
+Un CV es una lista que nadie puede comprobar. Quien contrata, un banco o un consulado no puede llamar a cada empleador para saber si esos puestos existieron, así que acepta un PDF que cualquiera escribe a mano. Y quien lo presenta entrega **toda** su historia aunque solo le pidan un dato.
+
+## La propuesta
+
+Constancia convierte el historial laboral en un **CV verificable**: cada puesto es una constancia firmada por un empleador acreditado, el trabajador las reúne en su bóveda, y quien lee el CV comprueba la trayectoria entera en su propio navegador, sin llamar a nadie. El trabajador decide, dato por dato, qué parte de esa historia se revela.
 
 ## Cómo funciona
 
-1. **Empleador.** RR. HH. crea una cuenta de organización con una clave del dispositivo (sin wallet, sin comisiones) y solicita acreditación al consorcio. Cuando un quórum de miembros la aprueba, puede emitir.
-2. **Trabajador.** Pide una constancia a su empleador. La recibe cifrada de extremo a extremo, con una clave propia por solicitud, y la guarda en su bóveda. Comparte **un dato a la vez** (empleado desde…, banda de ingreso, cargo) por enlace o QR, viendo antes exactamente lo que verá el lector.
-3. **Verificador.** Abre el enlace. Cinco chequeos corren en su navegador: certificado, empleador acreditado, firma, vínculo con su titular y registro en el ledger. Solo aparecen los datos elegidos, con el número exacto de los que siguen ocultos.
+| Rol | Qué hace |
+| :-- | :-- |
+| **Empleador** | RR. HH. crea una cuenta de organización con una clave del dispositivo, sin wallet y sin comisiones, y solicita acreditación al consorcio. Cuando un quórum de miembros la aprueba, puede emitir constancias. |
+| **Trabajador** | Pide una constancia a su empleador y la recibe cifrada de extremo a extremo, con una clave propia por solicitud. Las guarda en su bóveda, las une en un CV con su línea de tiempo, sus huecos y sus solapamientos, y comparte **un dato a la vez** por enlace o QR, viendo antes exactamente lo que verá el lector. |
+| **Verificador** | Abre el enlace o el archivo del CV. Cinco chequeos corren en su navegador y solo aparecen los datos elegidos, con el número exacto de los que siguen ocultos. |
 
-Varias constancias se unen en un **CV verificado**: la clave de cada constancia firma el hash del conjunto, así que nadie puede agregar un empleo ajeno ni quitar uno después de sellarlo. El **Laboratorio de cartas falsas** permite probar cuatro falsificaciones y ver en qué chequeo falla cada una.
+### Los cinco chequeos
+
+1. El certificado está bien formado.
+2. El empleador está acreditado por el consorcio.
+3. La firma del emisor es válida.
+4. El certificado está vinculado a su titular.
+5. Existe el registro en el ledger y no está revocado.
+
+Se repiten por cada entrada del CV y corren en el navegador de quien verifica: el certificado nunca sale de ahí. El chequeo del ledger consulta la cadena por un hash, a través de una única pasarela de lectura.
+
+## El CV verificado
+
+Cada constancia entra al CV con su propia clave. Al sellarlo, cada clave firma el hash del conjunto: nadie puede agregar un empleo ajeno ni quitar uno después de sellar. El resultado es un archivo con la trayectoria completa, verificable entrada por entrada, y un **Laboratorio de cartas falsas** donde se prueban cuatro falsificaciones y se ve en cuál chequeo falla cada una.
+
+## Confianza y no repudio
+
+El diseño ataca dos propiedades concretas, no una estética.
+
+**Confianza sin intermediario.** Nadie tiene que creerle a un PDF ni llamar al empleador. La raíz no es una empresa sino el consorcio: un empleador solo puede emitir si un quórum de miembros lo acreditó, y esa acreditación la comprueba el propio verificador, en su navegador, contra el contrato. Si el empleador se suspende, la misma constancia deja de pasar.
+
+**No repudio.** El emisor firma cada constancia con una clave ES256 de su dispositivo, y el ledger ancla el hash del certificado junto a la cuenta del emisor y al `keyId` que firmó. Después no puede negar que la emitió, ni afirmar que emitió otra cosa: el hash está publicado, la firma lo cubre y la revocación también queda registrada. Del lado del trabajador, cada constancia está atada a su clave y el CV se sella con la clave de cada entrada, así que tampoco puede agregar un empleo ajeno ni borrar uno después de sellarlo.
 
 ## El ledger del consorcio
 
-La raíz de confianza no es una empresa ni una cadena pública, sino la acreditación por un consorcio de miembros (en la demo: ficticios). Es una red permisionada con cuatro validadores y bloques de 2 s, sin comisiones, y su estado es público en `/ledger`. Guarda solo hashes, la cuenta del emisor y la hora: ningún nombre, dato ni certificado.
+La raíz de confianza no es una empresa: es la acreditación por un consorcio de miembros (en la demo, ficticios), registrada en un contrato sobre la testnet pública Sepolia. Cuatro miembros votan y un quórum de dos acredita a un empleador. El estado es público en `/ledger` y guarda solo el hash, la cuenta del emisor, la clave que firmó y la hora: ningún nombre, ningún dato, ningún certificado.
 
-## Qué es real en la demo y qué no
+## Qué es real
 
-- Las constancias son credenciales SD-JWT con divulgación selectiva (no pruebas de conocimiento cero); la verificación ocurre en el navegador.
-- El servidor solo ve texto cifrado, claves públicas, hashes y un número de empleado opaco.
-- Todos los empleadores, miembros y personas son ficticios.
-- En la demo los cuatro validadores corren en un mismo equipo y el navegador confía en una sola pasarela de lectura.
-- El ledger prueba quién lo dijo y cuándo, no que sea cierto: un empleador acreditado puede mentir, y la suspensión es la consecuencia.
-- Un enlace compartido se puede reutilizar hasta que expire. Si se pierde el dispositivo, se pide de nuevo la constancia.
+- **Credenciales SD-JWT** con divulgación selectiva (W3C VC 2.0), no pruebas de conocimiento cero. La verificación ocurre en el navegador.
+- **Servidor ciego.** Solo ve texto cifrado, claves públicas, hashes y un número de empleado opaco.
+- **Ledger en Sepolia.** Una sola wallet patrocinadora paga el gas de todas las operaciones a través de un paymaster; ningún usuario ve una comisión.
+- **Ficción declarada.** Todos los empleadores, miembros y personas de la demo son inventados.
+
+## Lo que no prometemos
+
+- Verificar un CV que ya exista en PDF. Lo que se verifica es la trayectoria compuesta por constancias de empleadores acreditados.
+- Que el ledger pruebe que la constancia es cierta. Prueba quién lo dijo y cuándo: un empleador acreditado puede mentir, y la suspensión es la consecuencia.
+- No repudio contra una clave robada. Si la clave del dispositivo se filtra, la constancia sigue siendo del emisor; la respuesta es revocar y suspender, no reescribir la historia.
+- Un enlace que no se pueda reutilizar. Un enlace compartido se puede reabrir hasta que expire.
+- Una lectura independiente del ledger. El navegador consulta la cadena a través de una sola pasarela nuestra.
+- Recuperación si se pierde el dispositivo. Se pide de nuevo la constancia.
 
 ## Tecnología
 
-Next.js 16, React 19, Tailwind CSS 4, TypeScript, SD-JWT VC (W3C VC 2.0), claves ES256 de WebCrypto, Hyperledger Besu (QBFT), Solidity y Foundry, cuentas ERC-4337 con claves P-256, viem, PostgreSQL con Prisma (solo buzón cifrado).
+| Capa | Tecnología |
+| :-- | :-- |
+| Producto | Next.js 16, React 19, Tailwind CSS 4, TypeScript |
+| Credencial | SD-JWT VC (W3C VC 2.0), claves ES256 de WebCrypto |
+| Cadena | Ethereum Sepolia, Solidity y Foundry, cuentas ERC-4337 con claves P-256, viem |
+| Servidor | PostgreSQL con Prisma, solo buzón cifrado |
 
 ## Equipo
 
 team-24 · Platanus Hack 26 Caracas.
+
+<img src="./team.webp" alt="El equipo de Constancia en Platanus Hack 26 Caracas" width="760" />
