@@ -129,6 +129,7 @@ export async function runIssue(
       await attempt('DISCARDED', 'The local issued list could not be updated', () =>
         deps.record({
           credentialHash: credential.credentialHash,
+          keyId: credential.keyId,
           employeeRef: request.employeeRef,
           issuedAt: new Date().toISOString(),
           kind: request.kind,

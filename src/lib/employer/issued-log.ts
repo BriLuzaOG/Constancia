@@ -1,6 +1,7 @@
 // Browser only. What this device issued, as hashes and opaque employee numbers: no claims, no names.
 export interface IssuedLogEntry {
   credentialHash: `0x${string}`;
+  keyId: `0x${string}`;
   employeeRef: string;
   issuedAt: string;
   kind: 'CURRENT' | 'PAST';
