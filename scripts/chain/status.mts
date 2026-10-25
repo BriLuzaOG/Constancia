@@ -1,6 +1,6 @@
 import { formatEther, getAddress, type Address } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { ENTRY_POINT, env, publicClient, rpcUrl } from './config.ts';
+import { ENTRY_POINT, env, publicClient, rpcUrl } from './config.mjs';
 
 const ZERO = /^0x0{40}$/;
 const entryPointAbi = [

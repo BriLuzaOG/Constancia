@@ -49,3 +49,5 @@ next-env.d.ts
 demo-pack/
 docker/ledger/data/
 contracts/out/
+contracts/lib/
+contracts/cache/

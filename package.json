@@ -16,8 +16,12 @@
     "lint:fix": "oxlint src/ --type-aware --fix",
     "format": "oxfmt src/",
     "format:check": "oxfmt --check src/",
-    "chain:sponsor": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/new-sponsor.ts",
-    "chain:status": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/status.ts"
+    "chain:sponsor": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/new-sponsor.mts",
+    "chain:status": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/status.mts",
+    "chain:compile": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/compile.mts",
+    "chain:deploy": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/deploy.mts",
+    "chain:deposit": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/deposit.mts",
+    "chain:spike": "tsx --conditions=react-server --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/chain/aa-spike.mts"
   },
   "dependencies": {
     "@noble/curves": "^2.4.0",
@@ -48,6 +52,7 @@
     "prisma": "^7.10.1",
     "solc": "0.8.28",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.5"
   }

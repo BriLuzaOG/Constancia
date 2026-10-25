@@ -542,7 +542,10 @@ interface IAccountFactory {
   limits get paid for. The sponsor funds it by depositing on the EntryPoint (`pnpm
   chain:deposit`); the deposit is the single pool that absorbs every fee.
 - **Bundler:** `POST /api/bundler`, JSON-RPC: `eth_chainId`, `eth_supportedEntryPoints`,
-  `eth_sponsorUserOperation` (sponsor-signed `paymasterAndData` + the real gas fields),
+  `eth_sponsorUserOperation` (params `[{ sender, factory?, factoryData?, callData }]`; returns the
+  account `nonce`, every gas field and the sponsor-signed paymaster fields, which the client must
+  use unchanged because the sponsor signed them; only our factory, the account itself and the
+  Ledger are valid call targets),
   `eth_estimateUserOperationGas` (real Sepolia estimates), `eth_sendUserOperation`,
   `eth_getUserOperationReceipt`, `eth_getUserOperationByHash`. It submits `handleOps` from
   `RELAYER_PRIVATE_KEY` (the funded sponsor EOA: it fronts the gas, and the EntryPoint refunds it in

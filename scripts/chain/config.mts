@@ -15,10 +15,10 @@ export function requireEnv(name: string): string {
   return value;
 }
 
-// Un RPC local de desarrollo viejo en .env no sirve: Sepolia es la única red.
+// Sin Alchemy configurado se usa un RPC público de Sepolia.
 export function rpcUrl(): string {
   const url = env('LEDGER_RPC_URL');
-  return url && !/127\.0\.0\.1|localhost/.test(url) ? url : SEPOLIA_PUBLIC_RPC;
+  return url ?? SEPOLIA_PUBLIC_RPC;
 }
 
 export function publicClient(url = rpcUrl()) {
