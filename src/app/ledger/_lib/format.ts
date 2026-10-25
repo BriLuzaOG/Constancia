@@ -27,7 +27,4 @@ export function nameOf(state: NetworkState, account: string): string {
   );
 }
 
-export function ageLabel(unixSeconds: number, nowMs: number): string {
-  const seconds = Math.max(0, Math.round(nowMs / 1000 - unixSeconds));
-  return seconds < 60 ? `${seconds} s ago` : `${Math.round(seconds / 60)} min ago`;
-}
+export { formatAge as ageLabel } from '@/lib/ledger/format';
