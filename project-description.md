@@ -48,6 +48,12 @@ El diseño ataca dos propiedades concretas, no una estética.
 
 La raíz de confianza no es una empresa: es la acreditación por un consorcio de miembros (en la demo, ficticios), registrada en un contrato sobre la testnet pública Sepolia. Cuatro miembros votan y un quórum de dos acredita a un empleador. El estado es público en `/ledger` y guarda solo el hash, la cuenta del emisor, la clave que firmó y la hora: ningún nombre, ningún dato, ningún certificado.
 
+## Por qué Sepolia y no la red de consorcio
+
+La solución tenía que estar desplegada y abierta desde cualquier navegador, y no teníamos un VPS: solo Render, que no puede alojar la red de consorcio simulada con sus validadores y su consenso. Así que la capa de acuerdo corre en **Sepolia**, la testnet pública de Ethereum, y se simula la propiedad que de verdad importa: **que nadie pague**.
+
+En una red de consorcio los validadores son los propios miembros y el gas se lo pagan entre ellos, así que para el usuario es gratis. En Sepolia el gas existe, y lo absorbe una sola wallet patrocinadora a través de un paymaster: ninguna operación le cuesta nada a nadie y no hay ninguna comisión que mostrar. El resto del modelo es el mismo en las dos redes: el contrato, los cuatro miembros, el quórum y la acreditación no cambian; solo cambia quién produce los bloques.
+
 ## Qué es real
 
 - **Credenciales SD-JWT** con divulgación selectiva (W3C VC 2.0), no pruebas de conocimiento cero. La verificación ocurre en el navegador.

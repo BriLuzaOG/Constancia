@@ -71,8 +71,9 @@ so an employer cannot deny what it issued, and the holder cannot splice a job in
 ## 🏗️ Architecture
 
 - **Credential:** W3C VC 2.0 secured with SD-JWT (selective disclosure), ES256 device keys.
-- **Ledger:** public Sepolia, a consortium contract with members and quorum; stores the hash, the
-  issuer and the signing key id, never personal data.
+- **Ledger:** a consortium contract with members and quorum, deployed on public Sepolia; stores the
+  hash, the issuer and the signing key id, never personal data. Sepolia stands in for a permissioned
+  consortium network we could not host on Render.
 - **Accounts:** ERC-4337 accounts controlled by P-256 device keys; a consortium sponsor wallet pays
   all gas through a paymaster.
 - **Server:** a blind mailbox (ciphertext, public keys, an opaque employee number) on Postgres.
@@ -136,7 +137,9 @@ CI runs the same gates on every push to `main` before it triggers the Render dep
   revocation is the consequence.
 - A shared link can be replayed until it expires.
 - The browser reads the ledger through a single read-only gateway of ours, not its own node.
-- The demo runs on public Sepolia and one sponsor wallet pays all gas.
+- The demo runs on public Sepolia, not on the consortium network it is designed for: we had no VPS to
+  run the validators, and Render cannot host them. One sponsor wallet absorbs every fee, which is the
+  property a permissioned network would give for free.
 - All employers, members and people shown are fictional.
 - The Verified CV and the Fake Letter Lab land with the last build; today the deployed demo serves the
   landing, `/employer`, `/vault`, `/verify` and `/ledger`.
