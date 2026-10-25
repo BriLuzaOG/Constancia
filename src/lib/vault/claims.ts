@@ -1,6 +1,15 @@
 import type { ClaimView } from '@/components/ui/claim-list';
 import { REVEAL_TEMPLATES } from '@/lib/credential/present';
 import type { ClaimName, DisclosedClaims } from '@/lib/credential/types';
+import type { CheckCode } from '@/lib/credential/verify';
+
+export const CHECK_LABELS: Record<CheckCode, string> = {
+  TOKEN: 'Certificate',
+  ISSUER: 'Employer accredited',
+  SIGNATURE: 'Employer’s signature',
+  HOLDER: 'Bound to its holder',
+  LEDGER: 'Ledger record',
+};
 
 export const CLAIM_LABELS: Record<ClaimName, string> = {
   givenName: 'Given name',

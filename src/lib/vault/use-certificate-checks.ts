@@ -12,14 +12,6 @@ export interface CheckRowView {
   detail?: string;
 }
 
-export const CHECK_LABELS: Record<CheckCode, string> = {
-  TOKEN: 'Certificate',
-  ISSUER: 'Employer accredited',
-  SIGNATURE: 'Employer’s signature',
-  HOLDER: 'Bound to its holder',
-  LEDGER: 'Ledger record',
-};
-
 const CODES: CheckCode[] = ['TOKEN', 'ISSUER', 'SIGNATURE', 'HOLDER', 'LEDGER'];
 
 /** The five checks of one certificate, row by row, as they resolve. */

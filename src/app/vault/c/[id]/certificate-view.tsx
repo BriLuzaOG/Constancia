@@ -9,9 +9,9 @@ import { Panel } from '@/components/ui/panel';
 import { Receipt } from '@/components/ui/receipt';
 import { vaultStore } from '@/lib/vault/browser';
 import { certificateInfo } from '@/lib/vault/certificate-info';
-import { ownClaimViews } from '@/lib/vault/claims';
+import { CHECK_LABELS, ownClaimViews } from '@/lib/vault/claims';
 import type { VaultCertificate } from '@/lib/vault/types';
-import { CHECK_LABELS, useCertificateChecks } from '@/lib/vault/use-certificate-checks';
+import { useCertificateChecks } from '@/lib/vault/use-certificate-checks';
 
 type Loaded = { status: 'loading' } | { status: 'missing' } | { status: 'ready'; certificate: VaultCertificate };
 
