@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { vaultStore } from './browser';
-import { getRequest, RequestGoneError } from './requests-client';
+import { receiveDeps, vaultStore } from './browser';
+import { syncRequest } from './receive';
 import type { VaultCertificate, VaultRequest } from './types';
 
 const POLL_MS = 3000;
@@ -11,31 +11,15 @@ export type VaultView =
   | { status: 'loading' }
   | { status: 'ready'; requests: VaultRequest[]; certificates: VaultCertificate[] };
 
-async function pollPending(requests: VaultRequest[]): Promise<void> {
-  const store = vaultStore();
-  await Promise.all(
-    requests
-      .filter((request) => request.status === 'PENDING')
-      .map(async (request) => {
-        try {
-          const { status } = await getRequest(request.id);
-          if (status === 'DECLINED') await store.putRequest({ ...request, status });
-          if (status === 'EXPIRED') await store.deleteRequest(request.id);
-        } catch (caught) {
-          if (caught instanceof RequestGoneError) await store.deleteRequest(request.id);
-          // any other failure: keep waiting, the next poll tries again
-        }
-      }),
-  );
-}
-
-/** The vault's requests and certificates, with pending requests polled while the page is open. */
-export function useVault(): VaultView {
+/** The vault's requests and certificates, with open requests polled while the page is open. */
+export function useVault(): VaultView & { refresh: () => Promise<void> } {
   const [view, setView] = useState<VaultView>({ status: 'loading' });
 
   const refresh = useCallback(async () => {
     const store = vaultStore();
-    await pollPending(await store.listRequests());
+    const deps = receiveDeps();
+    const open = (await store.listRequests()).filter((request) => request.status === 'PENDING');
+    await Promise.all(open.map((request) => syncRequest(deps, request)));
     const [requests, certificates] = await Promise.all([
       store.listRequests(),
       store.listCertificates(),
@@ -53,5 +37,5 @@ export function useVault(): VaultView {
     };
   }, [refresh]);
 
-  return view;
+  return { ...view, refresh };
 }

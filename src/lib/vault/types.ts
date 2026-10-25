@@ -1,5 +1,5 @@
 export type RequestKind = 'CURRENT' | 'PAST';
-export type RequestStatus = 'PENDING' | 'ISSUED' | 'DECLINED';
+export type RequestStatus = 'PENDING' | 'ISSUED' | 'DECLINED' | 'REJECTED';
 
 export interface VaultRequest {
   id: string;
@@ -12,6 +12,8 @@ export interface VaultRequest {
   status: RequestStatus;
   /** Non-extractable ECDH key; dropped once the delivery is stored. */
   encPrivateKey?: CryptoKey;
+  /** Why the last delivery could not be stored; a sentence for the holder. */
+  error?: string;
 }
 
 export interface VaultCertificate {
